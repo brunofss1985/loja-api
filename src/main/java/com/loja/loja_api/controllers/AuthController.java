@@ -32,6 +32,7 @@ public class AuthController {
             newUser.setPassword(passwordEncoder.encode(body.password()));  // Codificando a senha
             newUser.setEmail(body.email());
             newUser.setName(body.name());
+            newUser.setUserType(body.userType());
             this.repository.save(newUser);  // Salvando o novo usuário
 
             // Gerar o token
