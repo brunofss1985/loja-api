@@ -24,7 +24,7 @@ public class TokenService {
             String token = JWT.create()
                     .withIssuer("login-auth-api")
                     .withSubject(user.getEmail())
-                    .withClaim("userType", user.getUserType())
+//                    .withClaim("userType", user.getUserType())
                     .withExpiresAt(this.generateExpirationDate())
                     .sign(algorithm);
             return token;

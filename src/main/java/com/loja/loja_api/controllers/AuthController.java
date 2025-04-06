@@ -14,50 +14,42 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "Content-Type, Authorization")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
+
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody RegisterRequestDTO body) {
-        Optional<User> user = this.repository.findByEmail(body.email());
+    public ResponseEntity<?> register(@RequestBody RegisterRequestDTO body) {
+        Optional<User> user = repository.findByEmail(body.email());
 
-        // Verificar se o usuário já existe
         if (user.isEmpty()) {
             User newUser = new User();
-            newUser.setPassword(passwordEncoder.encode(body.password()));  // Codificando a senha
-            newUser.setEmail(body.email());
             newUser.setName(body.name());
-            newUser.setUserType(body.userType());
-            this.repository.save(newUser);  // Salvando o novo usuário
+            newUser.setEmail(body.email());
+            newUser.setPassword(passwordEncoder.encode(body.password()));
+            repository.save(newUser);
 
-            // Gerar o token
             String token = tokenService.generateToken(newUser);
-            System.out.println("Generated Token: " + token);
             return ResponseEntity.ok(new ResponseDTO(newUser.getName(), token));
         }
 
-        // Retornar erro se o e-mail já existe
         return ResponseEntity.badRequest().body("Email already in use.");
     }
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody LoginRequestDTO body) {
-        // Buscar o usuário pelo e-mail
-        User user = this.repository.findByEmail(body.email()).orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO body) {
+        User user = repository.findByEmail(body.email()).orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Verificar se a senha fornecida é válida
         if (passwordEncoder.matches(body.password(), user.getPassword())) {
-            // Gerar token se a senha for válida
             String token = tokenService.generateToken(user);
             return ResponseEntity.ok(new ResponseDTO(user.getName(), token));
         }
 
-        // Caso a senha seja inválida, retornar uma resposta de erro
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body("Invalid credentials");
     }
 }
