@@ -1,4 +1,5 @@
 package com.loja.loja_api.dto;
 
-public record RegisterRequestDTO(String name, String email, String password) {
-}
+import com.loja.loja_api.domain.user.UserType;
+
+public record RegisterRequestDTO(String name, String email, String password, UserType userType) {}
