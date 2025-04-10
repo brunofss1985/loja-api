@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -26,25 +27,32 @@ public class SecurityFilter extends OncePerRequestFilter {
     private UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         var token = recoverToken(request);
         var login = tokenService.validateToken(token);
 
         if (login != null) {
-            User user = userRepository.findByEmail(login).orElseThrow(() -> new RuntimeException("User not found"));
-            var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+            User user = userRepository.findByEmail(login)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            String role = "ROLE_" + user.getUserType().name(); // 👈 Define role de acordo com o tipo
+            var authorities = List.of(new SimpleGrantedAuthority(role));
+
+            System.out.println("✅ Authenticated: " + user.getEmail() + " with role: " + role);
+
             var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
         filterChain.doFilter(request, response);
     }
 
-    // Método para recuperar o token do cabeçalho Authorization
     private String recoverToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // Remove o "Bearer " do início do token
+            return authHeader.substring(7);
         }
         return null;
     }

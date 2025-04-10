@@ -18,7 +18,6 @@ public class TokenService {
     @Value("${api.security.token.secret}")
     private String secret;
 
-    // Gera o token JWT com subject (email), userType e tempo de expiração
     public String generateToken(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -26,7 +25,7 @@ public class TokenService {
             return JWT.create()
                     .withIssuer("login-auth-api")
                     .withSubject(user.getEmail())
-                    .withClaim("userType", user.getUserType().name()) // Adiciona o tipo de usuário
+                    .withClaim("userType", user.getUserType().name()) // 👈 inclui tipo de usuário
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
 
@@ -35,7 +34,6 @@ public class TokenService {
         }
     }
 
-    // Valida o token e retorna o email (subject)
     public String validateToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -44,14 +42,13 @@ public class TokenService {
                     .withIssuer("login-auth-api")
                     .build()
                     .verify(token)
-                    .getSubject(); // Retorna o email do usuário
+                    .getSubject();
 
         } catch (JWTVerificationException exception) {
             return null;
         }
     }
 
-    // Método para extrair o userType do token
     public String getUserTypeFromToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -67,7 +64,6 @@ public class TokenService {
         }
     }
 
-    // Define a expiração do token (2 horas a partir de agora)
     private Instant generateExpirationDate() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
