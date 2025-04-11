@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -37,7 +36,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             User user = userRepository.findByEmail(login)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            String role = "ROLE_" + user.getUserType().name(); // 👈 Define role de acordo com o tipo
+            String role = "ROLE_" + user.getUserType().name(); // 👈 ROLE_ADMIN, ROLE_USER...
             var authorities = List.of(new SimpleGrantedAuthority(role));
 
             System.out.println("✅ Authenticated: " + user.getEmail() + " with role: " + role);
