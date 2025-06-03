@@ -1,5 +1,6 @@
-package com.loja.loja_api.domain.user;
+package com.loja.loja_api.model;
 
+import com.loja.loja_api.domain.user.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 

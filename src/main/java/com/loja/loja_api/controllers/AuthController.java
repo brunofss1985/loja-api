@@ -1,6 +1,6 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.domain.user.User;
+import com.loja.loja_api.model.User;
 import com.loja.loja_api.dto.LoginRequestDTO;
 import com.loja.loja_api.dto.RegisterRequestDTO;
 import com.loja.loja_api.dto.ResponseDTO;

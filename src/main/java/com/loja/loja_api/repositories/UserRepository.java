@@ -1,6 +1,6 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.domain.user.User;
+import com.loja.loja_api.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
