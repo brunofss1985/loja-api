@@ -1,12 +1,13 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.dto.ProdutoDTO;
+import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.service.ProdutoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,17 +29,25 @@ public class ProdutoController {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    // Restrito a ADMIN
+    // Criar produto com imagem
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<Produto> criar(@RequestBody ProdutoDTO dto) {
-        return ResponseEntity.ok(service.salvar(dto));
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<Produto> criar(
+            @RequestPart("produto") ProdutoDTO dto,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem
+    ) {
+        return ResponseEntity.ok(service.salvar(dto, imagem));
     }
 
+    // Atualizar produto com imagem
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public ResponseEntity<Produto> atualizar(@PathVariable Long id, @RequestBody ProdutoDTO dto) {
-        return ResponseEntity.ok(service.atualizar(id, dto));
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<Produto> atualizar(
+            @PathVariable Long id,
+            @RequestPart("produto") ProdutoDTO dto,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem
+    ) {
+        return ResponseEntity.ok(service.atualizar(id, dto, imagem));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

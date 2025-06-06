@@ -26,23 +26,26 @@ public class SecurityFilter extends OncePerRequestFilter {
     private UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        var token = recoverToken(request);
-        var login = tokenService.validateToken(token);
+        String token = recoverToken(request);
+        String email = tokenService.validateToken(token);
 
-        if (login != null) {
-            User user = userRepository.findByEmail(login)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-            String role = "ROLE_" + user.getUserType().name(); // 👈 ROLE_ADMIN, ROLE_USER...
+            String role = "ROLE_" + user.getUserType().name();
             var authorities = List.of(new SimpleGrantedAuthority(role));
-
-            System.out.println("✅ Authenticated: " + user.getEmail() + " with role: " + role);
 
             var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            System.out.printf("🔐 [%s] autenticado como %s%n", user.getEmail(), role);
         }
 
         filterChain.doFilter(request, response);
@@ -50,9 +53,8 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private String recoverToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        return null;
+        return (authHeader != null && authHeader.startsWith("Bearer "))
+                ? authHeader.substring(7)
+                : null;
     }
 }

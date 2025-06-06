@@ -1,7 +1,12 @@
 package com.loja.loja_api.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.Date;
 import java.util.List;
 
@@ -19,18 +24,21 @@ public class Produto {
 
     private String nome;
     private String slug;
+
     @Column(length = 1000)
     private String descricao;
+
     @Column(length = 500)
     private String descricaoCurta;
-    private String categoria;
 
+    private String categoria;
     private Double peso;
     private String sabor;
     private String tamanhoPorcao;
 
     @Column(columnDefinition = "TEXT")
-    private String tabelaNutricional; // JSON como string
+    private String tabelaNutricional; // JSON serializado como string
+
     private Double preco;
     private Double precoDesconto;
     private Integer estoque;
@@ -41,10 +49,12 @@ public class Produto {
     private String sku;
     private String codigoBarras;
     private String imagemUrl;
+
     private Boolean destaque;
     private Boolean novoLancamento;
     private Boolean maisVendido;
     private Boolean promocaoAtiva;
+
     private Date dataExpiracao;
     private Date ultimaCompra;
     private Integer quantidadeVendida;
@@ -55,12 +65,16 @@ public class Produto {
     private Boolean ativo;
     private Date criadoEm;
     private Date atualizadoEm;
+
     @ElementCollection
     private List<String> tags;
+
     @ElementCollection
     private List<String> ingredientes;
+
     @ElementCollection
     private List<String> galeria;
+
     @ElementCollection
     private List<String> comentariosAdmin;
 }

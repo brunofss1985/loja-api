@@ -1,7 +1,9 @@
 package com.loja.loja_api.dto;
 
-import jakarta.persistence.ElementCollection;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -43,15 +45,8 @@ public class ProdutoDTO {
     private Boolean ativo;
     private Integer quantidadeVendida;
 
-    @ElementCollection
     private List<String> tags;
-
-    @ElementCollection
     private List<String> ingredientes;
-
-    @ElementCollection
     private List<String> galeria;
-
-    @ElementCollection
     private List<String> comentariosAdmin;
 }

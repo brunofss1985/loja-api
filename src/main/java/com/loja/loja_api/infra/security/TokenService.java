@@ -21,14 +21,12 @@ public class TokenService {
     public String generateToken(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-
             return JWT.create()
                     .withIssuer("login-auth-api")
                     .withSubject(user.getEmail())
-                    .withClaim("userType", user.getUserType().name()) // 👈 inclui tipo de usuário
+                    .withClaim("userType", user.getUserType().name())
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
-
         } catch (JWTCreationException exception) {
             throw new RuntimeException("Erro ao gerar o token JWT", exception);
         }
@@ -37,13 +35,11 @@ public class TokenService {
     public String validateToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-
             return JWT.require(algorithm)
                     .withIssuer("login-auth-api")
                     .build()
                     .verify(token)
                     .getSubject();
-
         } catch (JWTVerificationException exception) {
             return null;
         }
@@ -52,19 +48,20 @@ public class TokenService {
     public String getUserTypeFromToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-
             return JWT.require(algorithm)
                     .withIssuer("login-auth-api")
                     .build()
                     .verify(token)
-                    .getClaim("userType").asString();
-
+                    .getClaim("userType")
+                    .asString();
         } catch (JWTVerificationException exception) {
             return null;
         }
     }
 
     private Instant generateExpirationDate() {
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
+        return LocalDateTime.now()
+                .plusHours(2)
+                .toInstant(ZoneOffset.of("-03:00"));
     }
 }
