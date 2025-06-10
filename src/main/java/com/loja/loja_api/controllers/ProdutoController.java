@@ -30,7 +30,7 @@ public class ProdutoController {
     }
 
     // Criar produto com imagem
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> criar(
             @RequestPart("produto") ProdutoDTO dto,
@@ -40,7 +40,7 @@ public class ProdutoController {
     }
 
     // Atualizar produto com imagem
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> atualizar(
             @PathVariable Long id,
@@ -50,7 +50,7 @@ public class ProdutoController {
         return ResponseEntity.ok(service.atualizar(id, dto, imagem));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         service.deletar(id);

@@ -1,6 +1,5 @@
 package com.loja.loja_api.infra.security;
 
-import jakarta.servlet.Filter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -39,9 +38,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/imagens/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/produtos").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/produtos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/produtos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/produtos").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/produtos/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/produtos/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
@@ -62,7 +61,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOriginPatterns(List.of("http://localhost:4200"));
+        config.setAllowedOriginPatterns(List.of("*")); // Permitir qualquer origem
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setMaxAge(3600L);
