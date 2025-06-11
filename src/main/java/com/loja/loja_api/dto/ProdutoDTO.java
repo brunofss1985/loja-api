@@ -13,40 +13,42 @@ import java.util.List;
 @Builder
 public class ProdutoDTO {
     private String nome;
-    private String slug;
     private String descricao;
-    private String descricaoCurta;
     private String categoria;
-
-    private Double peso;
+    private String slug;
+    private String descricaoCurta;
     private String sabor;
     private String tamanhoPorcao;
+    private String fornecedor;
+    private String statusAprovacao;
 
-    private String tabelaNutricional;
+    private Double peso;
     private Double preco;
     private Double precoDesconto;
-    private Integer estoque;
-    private Integer qtdMinimaEstoque;
     private Double custo;
-    private String fornecedor;
     private Double lucroEstimado;
-    private String sku;
-    private String codigoBarras;
+
+//    private String tabelaNutricional;
+//    private String sku;
+//    private String codigoBarras;
     private String imagemUrl;
 
-    private Boolean destaque;
-    private Boolean novoLancamento;
-    private Boolean maisVendido;
-    private Boolean promocaoAtiva;
-    private String statusAprovacao;
-    private Boolean publicado;
-    private Double avaliacaoMedia;
-    private Integer quantidadeAvaliacoes;
-    private Boolean ativo;
-    private Integer quantidadeVendida;
+//    private Integer qtdMinimaEstoque;
+//    private Integer estoque;
+//    private Integer quantidadeAvaliacoes;
+//    private Integer quantidadeVendida;
 
-    private List<String> tags;
-    private List<String> ingredientes;
-    private List<String> galeria;
-    private List<String> comentariosAdmin;
+//    private Boolean destaque;
+//    private Boolean novoLancamento;
+//    private Boolean maisVendido;
+//    private Boolean promocaoAtiva;
+//    private Boolean publicado;
+//    private Boolean ativo;
+
+//    private Double avaliacaoMedia;
+
+//    private List<String> tags;
+//    private List<String> ingredientes;
+//    private List<String> galeria;
+//    private List<String> comentariosAdmin;
 }

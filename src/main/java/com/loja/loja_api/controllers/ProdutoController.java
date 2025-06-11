@@ -34,9 +34,9 @@ public class ProdutoController {
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> criar(
             @RequestPart("produto") ProdutoDTO dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem
-    ) {
-        return ResponseEntity.ok(service.salvar(dto, imagem));
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
+        return ResponseEntity.ok(service.salvar(dto, imagem
+        ));
     }
 
     // Atualizar produto com imagem
@@ -47,7 +47,8 @@ public class ProdutoController {
             @RequestPart("produto") ProdutoDTO dto,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem
     ) {
-        return ResponseEntity.ok(service.atualizar(id, dto, imagem));
+        return ResponseEntity.ok(service.atualizar(id, dto , imagem
+        ));
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")

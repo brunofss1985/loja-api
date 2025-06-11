@@ -38,7 +38,8 @@ public class ProdutoService {
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
     }
 
-    public Produto salvar(ProdutoDTO dto, MultipartFile imagem) {
+    public Produto salvar(ProdutoDTO dto
+            , MultipartFile imagem) {
         String imagemUrl = extrairOuGerarUrl(dto, imagem);
 
         Produto produto = Produto.builder()
@@ -47,42 +48,43 @@ public class ProdutoService {
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())
                 .categoria(dto.getCategoria())
-                .tags(dto.getTags())
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())
-                .ingredientes(dto.getIngredientes())
-                .tabelaNutricional(dto.getTabelaNutricional())
+//                .tags(dto.getTags())
+//                .ingredientes(dto.getIngredientes())
+//                .galeria(dto.getGaleria())
+//                .comentariosAdmin(dto.getComentariosAdmin())
+//                .tabelaNutricional(dto.getTabelaNutricional())
+//                .codigoBarras(dto.getCodigoBarras())
+//                .sku(dto.getSku())
+                .imagemUrl(imagemUrl)
+//                .estoque(dto.getEstoque())
+//                .qtdMinimaEstoque(dto.getQtdMinimaEstoque())
+//                .quantidadeAvaliacoes(dto.getQuantidadeAvaliacoes())
+//                .quantidadeVendida(dto.getQuantidadeVendida())
                 .preco(dto.getPreco())
                 .precoDesconto(dto.getPrecoDesconto())
-                .estoque(dto.getEstoque())
-                .qtdMinimaEstoque(dto.getQtdMinimaEstoque())
                 .custo(dto.getCusto())
                 .fornecedor(dto.getFornecedor())
                 .lucroEstimado(dto.getLucroEstimado())
-                .sku(dto.getSku())
-                .codigoBarras(dto.getCodigoBarras())
-                .imagemUrl(imagemUrl)
-                .galeria(dto.getGaleria())
-                .destaque(dto.getDestaque())
-                .novoLancamento(dto.getNovoLancamento())
-                .maisVendido(dto.getMaisVendido())
-                .promocaoAtiva(dto.getPromocaoAtiva())
+//                .destaque(dto.getDestaque())
+//                .novoLancamento(dto.getNovoLancamento())
+//                .maisVendido(dto.getMaisVendido())
+//                .promocaoAtiva(dto.getPromocaoAtiva())
+//                .publicado(dto.getPublicado())
+//                .ativo(dto.getAtivo())
                 .statusAprovacao(dto.getStatusAprovacao())
-                .publicado(dto.getPublicado())
-                .avaliacaoMedia(dto.getAvaliacaoMedia())
-                .quantidadeAvaliacoes(dto.getQuantidadeAvaliacoes())
-                .ativo(dto.getAtivo())
-                .quantidadeVendida(dto.getQuantidadeVendida())
-                .comentariosAdmin(dto.getComentariosAdmin())
-                .criadoEm(new Date())
-                .atualizadoEm(new Date())
+//                .avaliacaoMedia(dto.getAvaliacaoMedia())
+//                .criadoEm(new Date())
+//                .atualizadoEm(new Date())
                 .build();
 
         return repository.save(produto);
     }
 
-    public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem) {
+    public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem
+    ) {
         Produto produto = buscarPorId(id);
         String imagemUrl = extrairOuGerarUrl(dto, imagem);
 
@@ -91,35 +93,35 @@ public class ProdutoService {
         produto.setDescricao(dto.getDescricao());
         produto.setDescricaoCurta(dto.getDescricaoCurta());
         produto.setCategoria(dto.getCategoria());
-        produto.setTags(dto.getTags());
         produto.setPeso(dto.getPeso());
         produto.setSabor(dto.getSabor());
         produto.setTamanhoPorcao(dto.getTamanhoPorcao());
-        produto.setIngredientes(dto.getIngredientes());
-        produto.setTabelaNutricional(dto.getTabelaNutricional());
+//        produto.setTags(dto.getTags());
+//        produto.setIngredientes(dto.getIngredientes());
+//        produto.setGaleria(dto.getGaleria());
+//        produto.setComentariosAdmin(dto.getComentariosAdmin());
+//        produto.setTabelaNutricional(dto.getTabelaNutricional());
+//        produto.setCodigoBarras(dto.getCodigoBarras());
+//        produto.setSku(dto.getSku());
         produto.setPreco(dto.getPreco());
         produto.setPrecoDesconto(dto.getPrecoDesconto());
-        produto.setEstoque(dto.getEstoque());
-        produto.setQtdMinimaEstoque(dto.getQtdMinimaEstoque());
+//        produto.setEstoque(dto.getEstoque());
+//        produto.setQtdMinimaEstoque(dto.getQtdMinimaEstoque());
+//        produto.setQuantidadeAvaliacoes(dto.getQuantidadeAvaliacoes());
+//        produto.setQuantidadeVendida(dto.getQuantidadeVendida());
         produto.setCusto(dto.getCusto());
         produto.setFornecedor(dto.getFornecedor());
         produto.setLucroEstimado(dto.getLucroEstimado());
-        produto.setSku(dto.getSku());
-        produto.setCodigoBarras(dto.getCodigoBarras());
         produto.setImagemUrl(imagemUrl);
-        produto.setGaleria(dto.getGaleria());
-        produto.setDestaque(dto.getDestaque());
-        produto.setNovoLancamento(dto.getNovoLancamento());
-        produto.setMaisVendido(dto.getMaisVendido());
-        produto.setPromocaoAtiva(dto.getPromocaoAtiva());
+//        produto.setDestaque(dto.getDestaque());
+//        produto.setNovoLancamento(dto.getNovoLancamento());
+//        produto.setMaisVendido(dto.getMaisVendido());
+//        produto.setPromocaoAtiva(dto.getPromocaoAtiva());
+//        produto.setPublicado(dto.getPublicado());
+//        produto.setAtivo(dto.getAtivo());
         produto.setStatusAprovacao(dto.getStatusAprovacao());
-        produto.setPublicado(dto.getPublicado());
-        produto.setAvaliacaoMedia(dto.getAvaliacaoMedia());
-        produto.setQuantidadeAvaliacoes(dto.getQuantidadeAvaliacoes());
-        produto.setAtivo(dto.getAtivo());
-        produto.setQuantidadeVendida(dto.getQuantidadeVendida());
-        produto.setComentariosAdmin(dto.getComentariosAdmin());
-        produto.setAtualizadoEm(new Date());
+//        produto.setAvaliacaoMedia(dto.getAvaliacaoMedia());
+//        produto.setAtualizadoEm(new Date());
 
         return repository.save(produto);
     }
