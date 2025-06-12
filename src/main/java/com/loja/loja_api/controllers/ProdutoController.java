@@ -18,7 +18,6 @@ public class ProdutoController {
     @Autowired
     private ProdutoService service;
 
-    // Acesso público
     @GetMapping
     public ResponseEntity<List<Produto>> listarTodos() {
         return ResponseEntity.ok(service.listarTodos());
@@ -29,16 +28,13 @@ public class ProdutoController {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    // Criar produto com imagem
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> criar(
             @RequestPart("produto") ProdutoDTO dto,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem,
             @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria) {
-
         return ResponseEntity.ok(service.salvar(dto, imagem, galeria));
     }
-
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> atualizar(
@@ -46,10 +42,8 @@ public class ProdutoController {
             @RequestPart("produto") ProdutoDTO dto,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem,
             @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria) {
-
         return ResponseEntity.ok(service.atualizar(id, dto, imagem, galeria));
     }
-
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")

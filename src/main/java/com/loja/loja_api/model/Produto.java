@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -30,6 +29,7 @@ public class Produto {
 
     @Column(length = 500)
     private String descricaoCurta;
+
     private String categoria;
     private String sabor;
     private String tamanhoPorcao;
@@ -42,43 +42,19 @@ public class Produto {
     private Double custo;
     private Double lucroEstimado;
 
-//    @Column(columnDefinition = "TEXT")
-//    private String tabelaNutricional; // JSON serializado como string
-//    private String sku;
-//    private String codigoBarras;
-    private String imagemUrl;
+    // Substituindo imagemUrl por conteúdo binário
+    @Lob
+    private byte[] imagem;
 
+    private String imagemMimeType;
 
-//    private Boolean destaque;
-//    private Boolean novoLancamento;
-//    private Boolean maisVendido;
-//    private Boolean promocaoAtiva;
-//    private Boolean publicado;
-//    private Boolean ativo;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "produto_galeria")
+    @Column(name = "imagem")
+    private List<byte[]> galeria;
 
-//    private Double avaliacaoMedia;
-
-//    private Integer estoque;
-//    private Integer qtdMinimaEstoque;
-//    private Integer quantidadeVendida;
-//    private Integer quantidadeAvaliacoes;
-
-//    private Date dataExpiracao;
-//    private Date ultimaCompra;
-//    private Date criadoEm;
-//    private Date atualizadoEm;
-
-//    @ElementCollection
-//    private List<String> tags;
-//
-//    @ElementCollection
-//    private List<String> ingredientes;
-//
-//    @ElementCollection
-@ElementCollection(fetch = FetchType.EAGER)
-private List<String> galeria;
-
-//
-//    @ElementCollection
-//    private List<String> comentariosAdmin;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "produto_galeria_mime")
+    @Column(name = "mime_type")
+    private List<String> galeriaMimeTypes;
 }
