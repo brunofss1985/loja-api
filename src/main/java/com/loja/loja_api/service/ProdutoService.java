@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,9 +33,51 @@ public class ProdutoService {
 
     public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto existente = buscarPorId(id);
-        Produto atualizado = construirProduto(dto, imagem, galeriaArquivos);
-        atualizado.setId(existente.getId());
-        return repository.save(atualizado);
+
+        try {
+            // Atualiza campos básicos
+            existente.setNome(dto.getNome());
+            existente.setSlug(dto.getSlug());
+            existente.setDescricao(dto.getDescricao());
+            existente.setDescricaoCurta(dto.getDescricaoCurta());
+            existente.setCategoria(dto.getCategoria());
+            existente.setPeso(dto.getPeso());
+            existente.setSabor(dto.getSabor());
+            existente.setTamanhoPorcao(dto.getTamanhoPorcao());
+            existente.setPreco(dto.getPreco());
+            existente.setPrecoDesconto(dto.getPrecoDesconto());
+            existente.setCusto(dto.getCusto());
+            existente.setFornecedor(dto.getFornecedor());
+            existente.setLucroEstimado(dto.getLucroEstimado());
+            existente.setStatusAprovacao(dto.getStatusAprovacao());
+
+            // ✅ Somente atualiza a imagem se uma nova for enviada
+            if (imagem != null && !imagem.isEmpty()) {
+                existente.setImagem(imagem.getBytes());
+                existente.setImagemMimeType(imagem.getContentType());
+            }
+
+            // ✅ Só substitui a galeria se o usuário enviar arquivos
+            if (galeriaArquivos != null && !galeriaArquivos.isEmpty()) {
+                List<byte[]> novaGaleria = new ArrayList<>();
+                List<String> novosMimes = new ArrayList<>();
+
+                for (MultipartFile file : galeriaArquivos) {
+                    if (!file.isEmpty()) {
+                        novaGaleria.add(file.getBytes());
+                        novosMimes.add(file.getContentType());
+                    }
+                }
+
+                existente.setGaleria(novaGaleria);
+                existente.setGaleriaMimeTypes(novosMimes);
+            }
+
+            return repository.save(existente);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage());
+        }
     }
 
     public void deletar(Long id) {
