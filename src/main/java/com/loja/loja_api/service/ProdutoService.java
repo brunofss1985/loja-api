@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -38,9 +39,9 @@ public class ProdutoService {
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
     }
 
-    public Produto salvar(ProdutoDTO dto
-            , MultipartFile imagem) {
+    public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeria) {
         String imagemUrl = extrairOuGerarUrl(dto, imagem);
+        List<String> nomesGaleria = salvarGaleria(galeria, dto.getGaleria()); // ✅ esta linha é crucial
 
         Produto produto = Produto.builder()
                 .nome(dto.getNome())
@@ -51,42 +52,26 @@ public class ProdutoService {
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())
-//                .tags(dto.getTags())
-//                .ingredientes(dto.getIngredientes())
-//                .galeria(dto.getGaleria())
-//                .comentariosAdmin(dto.getComentariosAdmin())
-//                .tabelaNutricional(dto.getTabelaNutricional())
-//                .codigoBarras(dto.getCodigoBarras())
-//                .sku(dto.getSku())
                 .imagemUrl(imagemUrl)
-//                .estoque(dto.getEstoque())
-//                .qtdMinimaEstoque(dto.getQtdMinimaEstoque())
-//                .quantidadeAvaliacoes(dto.getQuantidadeAvaliacoes())
-//                .quantidadeVendida(dto.getQuantidadeVendida())
+                .galeria(nomesGaleria) // ✅ precisa estar aqui
                 .preco(dto.getPreco())
                 .precoDesconto(dto.getPrecoDesconto())
                 .custo(dto.getCusto())
                 .fornecedor(dto.getFornecedor())
                 .lucroEstimado(dto.getLucroEstimado())
-//                .destaque(dto.getDestaque())
-//                .novoLancamento(dto.getNovoLancamento())
-//                .maisVendido(dto.getMaisVendido())
-//                .promocaoAtiva(dto.getPromocaoAtiva())
-//                .publicado(dto.getPublicado())
-//                .ativo(dto.getAtivo())
                 .statusAprovacao(dto.getStatusAprovacao())
-//                .avaliacaoMedia(dto.getAvaliacaoMedia())
-//                .criadoEm(new Date())
-//                .atualizadoEm(new Date())
                 .build();
 
         return repository.save(produto);
     }
 
-    public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem
-    ) {
+
+
+    public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto produto = buscarPorId(id);
+
         String imagemUrl = extrairOuGerarUrl(dto, imagem);
+        List<String> nomesGaleria = salvarGaleria(galeriaArquivos, dto.getGaleria());
 
         produto.setNome(dto.getNome());
         produto.setSlug(dto.getSlug());
@@ -96,35 +81,47 @@ public class ProdutoService {
         produto.setPeso(dto.getPeso());
         produto.setSabor(dto.getSabor());
         produto.setTamanhoPorcao(dto.getTamanhoPorcao());
-//        produto.setTags(dto.getTags());
-//        produto.setIngredientes(dto.getIngredientes());
-//        produto.setGaleria(dto.getGaleria());
-//        produto.setComentariosAdmin(dto.getComentariosAdmin());
-//        produto.setTabelaNutricional(dto.getTabelaNutricional());
-//        produto.setCodigoBarras(dto.getCodigoBarras());
-//        produto.setSku(dto.getSku());
+        produto.setImagemUrl(imagemUrl);
+        produto.setGaleria(nomesGaleria); // 🎯 aqui!
         produto.setPreco(dto.getPreco());
         produto.setPrecoDesconto(dto.getPrecoDesconto());
-//        produto.setEstoque(dto.getEstoque());
-//        produto.setQtdMinimaEstoque(dto.getQtdMinimaEstoque());
-//        produto.setQuantidadeAvaliacoes(dto.getQuantidadeAvaliacoes());
-//        produto.setQuantidadeVendida(dto.getQuantidadeVendida());
         produto.setCusto(dto.getCusto());
         produto.setFornecedor(dto.getFornecedor());
         produto.setLucroEstimado(dto.getLucroEstimado());
-        produto.setImagemUrl(imagemUrl);
-//        produto.setDestaque(dto.getDestaque());
-//        produto.setNovoLancamento(dto.getNovoLancamento());
-//        produto.setMaisVendido(dto.getMaisVendido());
-//        produto.setPromocaoAtiva(dto.getPromocaoAtiva());
-//        produto.setPublicado(dto.getPublicado());
-//        produto.setAtivo(dto.getAtivo());
         produto.setStatusAprovacao(dto.getStatusAprovacao());
-//        produto.setAvaliacaoMedia(dto.getAvaliacaoMedia());
-//        produto.setAtualizadoEm(new Date());
 
         return repository.save(produto);
     }
+
+    private List<String> salvarGaleria(List<MultipartFile> arquivos, List<String> nomesRecebidos) {
+        List<String> nomesSalvos = new ArrayList<>();
+
+        if (arquivos != null && !arquivos.isEmpty()) {
+            for (MultipartFile arquivo : arquivos) {
+                if (!arquivo.isEmpty()) {
+                    try {
+                        String nomeArquivo = UUID.randomUUID() + "_" + arquivo.getOriginalFilename();
+                        Path diretorio = Paths.get(uploadDir);
+                        Files.createDirectories(diretorio);
+
+                        Path caminhoArquivo = diretorio.resolve(nomeArquivo);
+                        Files.copy(arquivo.getInputStream(), caminhoArquivo, StandardCopyOption.REPLACE_EXISTING);
+
+                        nomesSalvos.add(nomeArquivo);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Erro ao salvar imagem da galeria: " + e.getMessage());
+                    }
+                }
+            }
+        } else if (nomesRecebidos != null) {
+            nomesSalvos.addAll(nomesRecebidos);
+        }
+
+        return nomesSalvos;
+    }
+
+
+
 
     public void deletar(Long id) {
         Produto produto = buscarPorId(id);

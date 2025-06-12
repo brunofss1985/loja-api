@@ -49,6 +49,7 @@ public class ProdutoDTO {
 
 //    private List<String> tags;
 //    private List<String> ingredientes;
-//    private List<String> galeria;
+private List<String> galeria;
+
 //    private List<String> comentariosAdmin;
 }

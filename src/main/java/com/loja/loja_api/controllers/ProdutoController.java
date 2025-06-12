@@ -30,26 +30,26 @@ public class ProdutoController {
     }
 
     // Criar produto com imagem
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> criar(
             @RequestPart("produto") ProdutoDTO dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
-        return ResponseEntity.ok(service.salvar(dto, imagem
-        ));
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
+            @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria) {
+
+        return ResponseEntity.ok(service.salvar(dto, imagem, galeria));
     }
 
-    // Atualizar produto com imagem
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> atualizar(
             @PathVariable Long id,
             @RequestPart("produto") ProdutoDTO dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem
-    ) {
-        return ResponseEntity.ok(service.atualizar(id, dto , imagem
-        ));
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
+            @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria) {
+
+        return ResponseEntity.ok(service.atualizar(id, dto, imagem, galeria));
     }
+
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")

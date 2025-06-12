@@ -75,7 +75,9 @@ public class Produto {
 //    private List<String> ingredientes;
 //
 //    @ElementCollection
-//    private List<String> galeria;
+@ElementCollection(fetch = FetchType.EAGER)
+private List<String> galeria;
+
 //
 //    @ElementCollection
 //    private List<String> comentariosAdmin;
