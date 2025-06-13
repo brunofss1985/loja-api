@@ -35,7 +35,6 @@ public class ProdutoService {
         Produto existente = buscarPorId(id);
 
         try {
-            // Atualiza campos básicos
             existente.setNome(dto.getNome());
             existente.setSlug(dto.getSlug());
             existente.setDescricao(dto.getDescricao());
@@ -50,14 +49,34 @@ public class ProdutoService {
             existente.setFornecedor(dto.getFornecedor());
             existente.setLucroEstimado(dto.getLucroEstimado());
             existente.setStatusAprovacao(dto.getStatusAprovacao());
+            existente.setAtivo(dto.getAtivo());
+            existente.setEstoque(dto.getEstoque());
+            existente.setEstoqueMinimo(dto.getEstoqueMinimo());
+            existente.setEstoqueMaximo(dto.getEstoqueMaximo());
+            existente.setLocalizacaoFisica(dto.getLocalizacaoFisica());
+            existente.setCodigoBarras(dto.getCodigoBarras());
+            existente.setDimensoes(dto.getDimensoes());
+            existente.setRestricoes(dto.getRestricoes());
+            existente.setTabelaNutricional(dto.getTabelaNutricional());
+            existente.setModoDeUso(dto.getModoDeUso());
+            existente.setPalavrasChave(dto.getPalavrasChave());
+            existente.setAvaliacaoMedia(dto.getAvaliacaoMedia());
+            existente.setComentarios(dto.getComentarios());
+            existente.setDataCadastro(dto.getDataCadastro());
+            existente.setDataUltimaAtualizacao(dto.getDataUltimaAtualizacao());
+            existente.setDataValidade(dto.getDataValidade());
+            existente.setFornecedorId(dto.getFornecedorId());
+            existente.setCnpjFornecedor(dto.getCnpjFornecedor());
+            existente.setContatoFornecedor(dto.getContatoFornecedor());
+            existente.setPrazoEntregaFornecedor(dto.getPrazoEntregaFornecedor());
+            existente.setQuantidadeVendida(dto.getQuantidadeVendida());
+            existente.setVendasMensais(dto.getVendasMensais());
 
-            // ✅ Somente atualiza a imagem se uma nova for enviada
             if (imagem != null && !imagem.isEmpty()) {
                 existente.setImagem(imagem.getBytes());
                 existente.setImagemMimeType(imagem.getContentType());
             }
 
-            // ✅ Só substitui a galeria se o usuário enviar arquivos
             if (galeriaArquivos != null && !galeriaArquivos.isEmpty()) {
                 List<byte[]> novaGaleria = new ArrayList<>();
                 List<String> novosMimes = new ArrayList<>();
@@ -125,6 +144,28 @@ public class ProdutoService {
                 .fornecedor(dto.getFornecedor())
                 .lucroEstimado(dto.getLucroEstimado())
                 .statusAprovacao(dto.getStatusAprovacao())
+                .ativo(dto.getAtivo())
+                .estoque(dto.getEstoque())
+                .estoqueMinimo(dto.getEstoqueMinimo())
+                .estoqueMaximo(dto.getEstoqueMaximo())
+                .localizacaoFisica(dto.getLocalizacaoFisica())
+                .codigoBarras(dto.getCodigoBarras())
+                .dimensoes(dto.getDimensoes())
+                .restricoes(dto.getRestricoes())
+                .tabelaNutricional(dto.getTabelaNutricional())
+                .modoDeUso(dto.getModoDeUso())
+                .palavrasChave(dto.getPalavrasChave())
+                .avaliacaoMedia(dto.getAvaliacaoMedia())
+                .comentarios(dto.getComentarios())
+                .dataCadastro(dto.getDataCadastro())
+                .dataUltimaAtualizacao(dto.getDataUltimaAtualizacao())
+                .dataValidade(dto.getDataValidade())
+                .fornecedorId(dto.getFornecedorId())
+                .cnpjFornecedor(dto.getCnpjFornecedor())
+                .contatoFornecedor(dto.getContatoFornecedor())
+                .prazoEntregaFornecedor(dto.getPrazoEntregaFornecedor())
+                .quantidadeVendida(dto.getQuantidadeVendida())
+                .vendasMensais(dto.getVendasMensais())
                 .imagem(imagemBytes)
                 .imagemMimeType(imagemMime)
                 .galeria(galeria)
