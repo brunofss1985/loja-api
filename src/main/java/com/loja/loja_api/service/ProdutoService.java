@@ -26,6 +26,11 @@ public class ProdutoService {
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
     }
 
+    public List<Produto> buscarPorCategoria(String categoria) {
+        return repository.findByCategoriaIgnoreCase(categoria);
+    }
+
+
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto produto = construirProduto(dto, imagem, galeriaArquivos);
         return repository.save(produto);

@@ -32,6 +32,15 @@ public class SecurityFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        // Libera requisições GET públicas aos produtos sem autenticação
+        if (method.equals("GET") && path.startsWith("/api/produtos")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = recoverToken(request);
         String email = tokenService.validateToken(token);
 

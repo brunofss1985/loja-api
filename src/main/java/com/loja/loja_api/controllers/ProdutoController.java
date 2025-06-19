@@ -23,6 +23,13 @@ public class ProdutoController {
         return ResponseEntity.ok(service.listarTodos());
     }
 
+    @GetMapping("/categoria/{categoria}")
+    public ResponseEntity<List<Produto>> buscarPorCategoria(@PathVariable String categoria) {
+        List<Produto> produtos = service.buscarPorCategoria(categoria);
+        return ResponseEntity.ok(produtos);
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
@@ -51,4 +58,9 @@ public class ProdutoController {
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+
+
+
+
 }
