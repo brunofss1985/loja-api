@@ -35,12 +35,30 @@ public class SecurityFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
+        System.out.println("=== SECURITY FILTER - PATH: " + path + " METHOD: " + method + " ===");
+
         // Libera requisições GET públicas aos produtos sem autenticação
         if (method.equals("GET") && path.startsWith("/api/produtos")) {
+            System.out.println("=== LIBERANDO PRODUTOS ===");
             filterChain.doFilter(request, response);
             return;
         }
 
+        // LIBERA ENDPOINTS DO CHATBOT
+        if (path.startsWith("/chatbot")) {
+            System.out.println("=== LIBERANDO CHATBOT: " + path + " ===");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // LIBERA ENDPOINTS DE AUTH
+        if (path.startsWith("/auth/")) {
+            System.out.println("=== LIBERANDO AUTH ===");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        System.out.println("=== VALIDANDO TOKEN ===");
         String token = recoverToken(request);
         String email = tokenService.validateToken(token);
 

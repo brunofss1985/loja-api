@@ -15,18 +15,14 @@ public class GlobalCorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Libera envio de cookies ou cabeçalhos de autenticação
-        config.setAllowCredentials(true);
+        // DESABILITADO allowCredentials
+        config.setAllowCredentials(false);
 
-        // Use allowedOriginPatterns ao invés de allowedOrigins quando allowCredentials=true
-        config.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:4200"
-                // Adicione outros domínios específicos se necessário (como produção)
-                // "https://app.loja.com.br"
-        ));
+        // Agora pode usar allowedOrigins
+        config.setAllowedOrigins(Arrays.asList("*"));
 
         // Permite os headers usados pelo frontend
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        config.setAllowedHeaders(Arrays.asList("*"));
 
         // Métodos HTTP permitidos
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
