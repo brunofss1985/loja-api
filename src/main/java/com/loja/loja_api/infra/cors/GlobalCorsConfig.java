@@ -7,6 +7,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 public class GlobalCorsConfig {
@@ -15,21 +16,47 @@ public class GlobalCorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // DESABILITADO allowCredentials
+        // MANTIDO desabilitado para compatibilidade
         config.setAllowCredentials(false);
 
-        // Agora pode usar allowedOrigins
-        config.setAllowedOrigins(Arrays.asList("*"));
+        // Permite todas as origens (funciona porque credentials=false)
+        config.setAllowedOriginPatterns(Collections.singletonList("*"));
 
-        // Permite os headers usados pelo frontend
-        config.setAllowedHeaders(Arrays.asList("*"));
+        // Headers específicos mais comuns do Angular + genérico
+        config.setAllowedHeaders(Arrays.asList(
+                "Origin",
+                "Content-Type",
+                "Accept",
+                "Authorization",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "X-Requested-With",
+                "Cache-Control",
+                "*" // Fallback para qualquer header
+        ));
 
-        // Métodos HTTP permitidos
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Métodos HTTP completos
+        config.setAllowedMethods(Arrays.asList(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "HEAD",
+                "PATCH"
+        ));
 
-        // Tempo de cache do preflight (em segundos)
+        // Headers expostos para o frontend
+        config.setExposedHeaders(Arrays.asList(
+                "Access-Control-Allow-Origin",
+                "Access-Control-Allow-Credentials",
+                "Content-Type"
+        ));
+
+        // Cache do preflight (1 hora)
         config.setMaxAge(3600L);
 
+        // Aplica para todas as rotas
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 

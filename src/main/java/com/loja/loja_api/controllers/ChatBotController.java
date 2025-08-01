@@ -9,10 +9,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/chatbot")
+//@CrossOrigin(
+//        origins = "*",
+//        allowedHeaders = "*",
+//        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS}
+//)
 public class ChatBotController {
 
     @Value("${openai.api.key:}")
@@ -22,7 +26,6 @@ public class ChatBotController {
     private String openaiApiUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final Random random = new Random();
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -39,46 +42,41 @@ public class ChatBotController {
 
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, String> request) {
+        String userMessage = request.get("message");
+        System.out.println("=== MENSAGEM RECEBIDA: " + userMessage + " ===");
+
+        // SEMPRE TENTA OPENAI - SEM VERIFICAÇÕES PRÉVIAS
         try {
-            String userMessage = request.get("message");
-            System.out.println("=== MENSAGEM RECEBIDA: " + userMessage + " ===");
+            System.out.println("=== FORÇANDO CHAMADA OPENAI ===");
+            String aiResponse = callOpenAI(userMessage);
 
-            String aiResponse;
-            String source;
-
-            if (isOpenAIConfigured()) {
-                try {
-                    System.out.println("=== TENTANDO OPENAI ===");
-                    aiResponse = callOpenAI(userMessage);
-                    source = "openai";
-                } catch (Exception openaiError) {
-                    System.err.println("=== OPENAI FALHOU, USANDO FALLBACK ===");
-                    System.err.println("Erro: " + openaiError.getMessage());
-                    aiResponse = generateQuickResponse(userMessage);
-                    source = "fallback";
-                }
-            } else {
-                System.out.println("=== OPENAI NÃO CONFIGURADA, USANDO FALLBACK ===");
-                aiResponse = generateQuickResponse(userMessage);
-                source = "fallback";
-            }
+            System.out.println("=== ✅ SUCESSO OPENAI: " + aiResponse + " ===");
 
             Map<String, Object> response = new HashMap<>();
             response.put("response", aiResponse);
-            response.put("source", source);
+            response.put("source", "openai");
             response.put("timestamp", LocalDateTime.now());
 
-            System.out.println("=== RESPOSTA ENVIADA (" + source + "): " + aiResponse + " ===");
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.err.println("Erro geral no chat: " + e.getMessage());
+            System.err.println("=== ❌ OPENAI FALHOU: " + e.getMessage() + " ===");
+
+            // MENSAGEM DE ERRO ESPECÍFICA
+            String errorMessage = "⚠️ **Assistente temporariamente indisponível**\n\n" +
+                    "Nosso assistente inteligente está com problemas técnicos.\n\n" +
+                    "**Contate-nos:**\n" +
+                    "📞 (11) 3333-4444 | 💬 (11) 99999-9999\n" +
+                    "📧 contato@supplementstore.com\n\n" +
+                    "**Horário**: Seg-Sáb, 8h-20h\n\n" +
+                    "Tente novamente em alguns minutos! 😊";
 
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("response", "Erro temporário. Tente novamente.");
+            errorResponse.put("response", errorMessage);
             errorResponse.put("source", "error");
             errorResponse.put("timestamp", LocalDateTime.now());
 
+            System.out.println("=== RESPOSTA DE ERRO ENVIADA ===");
             return ResponseEntity.ok(errorResponse);
         }
     }
@@ -90,16 +88,44 @@ public class ChatBotController {
     }
 
     private String callOpenAI(String message) {
+        System.out.println("=== INICIANDO CHAMADA OPENAI COM CHAVE: " +
+                (openaiApiKey != null ? openaiApiKey.substring(0, 7) + "..." : "NULL") + " ===");
+
+        if (!isOpenAIConfigured()) {
+            throw new RuntimeException("API Key da OpenAI não configurada corretamente");
+        }
+
         try {
-            System.out.println("=== INICIANDO CHAMADA OPENAI ===");
+            // PROMPT ESPECÍFICO DA LOJA
+            String systemPrompt = """
+            Você é um assistente inteligente da SupplementStore, especializada em suplementos.
+
+            PRODUTOS DISPONÍVEIS:
+            - Whey Protein Premium: R$ 89,90 - Proteína para ganho de massa muscular
+            - BCAA 2:1:1: R$ 45,90 - Aminoácidos para recuperação muscular  
+            - Creatina Monohidratada: R$ 35,90 - Aumenta força e potência
+
+            INFORMAÇÕES DA LOJA:
+            - Frete grátis acima de R$ 99,00
+            - Entrega: 3-7 dias úteis para todo Brasil
+            - Atendimento: Segunda a sábado, 8h às 20h
+            - Processamento: até 24h úteis
+
+            COMO USAR:
+            - Whey: 1 scoop (30g) com água após treino
+            - BCAA: 5g antes e 5g após treino
+            - Creatina: 3-5g diariamente pós-treino
+
+            Seja útil, amigável e use emojis. Foque em suplementos e informações da loja.
+            """;
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-3.5-turbo");
             requestBody.put("messages", List.of(
-                    Map.of("role", "system", "content", "Você é um assistente de loja online. Seja útil e direto."),
+                    Map.of("role", "system", "content", systemPrompt),
                     Map.of("role", "user", "content", message)
             ));
-            requestBody.put("max_tokens", 150);
+            requestBody.put("max_tokens", 300);
             requestBody.put("temperature", 0.7);
 
             HttpHeaders headers = new HttpHeaders();
@@ -108,57 +134,36 @@ public class ChatBotController {
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
+            System.out.println("=== ENVIANDO REQUISIÇÃO PARA OPENAI ===");
+
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     openaiApiUrl,
                     entity,
                     Map.class
             );
 
-            Map<String, Object> responseBody = response.getBody();
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-            Map<String, Object> firstChoice = choices.get(0);
-            Map<String, Object> messageObj = (Map<String, Object>) firstChoice.get("message");
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> responseBody = response.getBody();
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
 
-            return (String) messageObj.get("content");
+                if (choices != null && !choices.isEmpty()) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> firstChoice = choices.get(0);
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> messageObj = (Map<String, Object>) firstChoice.get("message");
+
+                    String content = (String) messageObj.get("content");
+                    System.out.println("=== RESPOSTA OPENAI RECEBIDA: " + content + " ===");
+                    return content;
+                }
+            }
+
+            throw new RuntimeException("Resposta inválida da OpenAI");
 
         } catch (Exception e) {
-            System.err.println("=== ERRO NA OPENAI: " + e.getMessage());
-            throw new RuntimeException("Erro na OpenAI: " + e.getMessage());
+            System.err.println("=== ERRO DETALHADO NA OPENAI: " + e.getClass().getSimpleName() + " - " + e.getMessage() + " ===");
+            throw new RuntimeException("Falha na comunicação com OpenAI: " + e.getMessage());
         }
-    }
-
-    private String generateQuickResponse(String userMessage) {
-        String message = userMessage.toLowerCase();
-
-        if (message.contains("ola") || message.contains("oi")) {
-            return "Olá! Como posso ajudar? 😊";
-        }
-
-        if (message.contains("produto")) {
-            return "Temos vários produtos! O que procura?";
-        }
-
-        if (message.contains("preco")) {
-            return "Os preços variam. Qual produto interessa?";
-        }
-
-        if (message.contains("entrega")) {
-            return "Entregamos em todo Brasil! 📦";
-        }
-
-        if (message.contains("obrigado")) {
-            return "De nada! Sempre à disposição! 😄";
-        }
-
-        // Respostas rápidas aleatórias
-        String[] respostas = {
-                "Posso ajudar com isso! 👍",
-                "Interessante! Me conte mais.",
-                "Estou aqui para ajudar! ✨",
-                "Que legal! Como posso auxiliar?",
-                "Entendi! Precisa de mais info?"
-        };
-
-        return respostas[random.nextInt(respostas.length)];
     }
 }

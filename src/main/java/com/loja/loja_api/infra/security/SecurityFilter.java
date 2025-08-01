@@ -45,7 +45,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
 
         // LIBERA ENDPOINTS DO CHATBOT
-        if (path.startsWith("/chatbot")) {
+        if (path.startsWith("/chatbot") || path.startsWith("/public/chat")) {
             System.out.println("=== LIBERANDO CHATBOT: " + path + " ===");
             filterChain.doFilter(request, response);
             return;

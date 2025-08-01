@@ -38,6 +38,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/chatbot/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/chatbot/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/public/chat/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/public/chat/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/test-public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/simple").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
@@ -55,8 +57,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(false); // DESABILITADO
-        config.setAllowedOrigins(List.of("*")); // Agora pode usar *
+        config.setAllowCredentials(false);
+        config.setAllowedOrigins(List.of("*"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setMaxAge(3600L);
