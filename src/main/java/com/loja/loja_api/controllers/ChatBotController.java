@@ -1,5 +1,7 @@
 package com.loja.loja_api.controllers;
 
+import com.loja.loja_api.service.ProductChatService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -87,6 +89,9 @@ public class ChatBotController {
                 !openaiApiKey.equals("sk-sua-chave-aqui");
     }
 
+    @Autowired
+    private ProductChatService productChatService;
+
     private String callOpenAI(String message) {
         System.out.println("=== INICIANDO CHAMADA OPENAI COM CHAVE: " +
                 (openaiApiKey != null ? openaiApiKey.substring(0, 7) + "..." : "NULL") + " ===");
@@ -96,28 +101,29 @@ public class ChatBotController {
         }
 
         try {
-            // PROMPT ESPECÍFICO DA LOJA
-            String systemPrompt = """
-            Você é um assistente inteligente da SupplementStore, especializada em suplementos.
+            // BUSCA PRODUTOS DO BANCO VIA SERVICE
+            String dynamicProducts = productChatService.getProductsForChatbot();
+            String storeInfo = productChatService.getStoreInfo();
 
-            PRODUTOS DISPONÍVEIS:
-            - Whey Protein Premium: R$ 89,90 - Proteína para ganho de massa muscular
-            - BCAA 2:1:1: R$ 45,90 - Aminoácidos para recuperação muscular  
-            - Creatina Monohidratada: R$ 35,90 - Aumenta força e potência
+            System.out.println("=== PRODUTOS DO BANCO CARREGADOS ===");
 
-            INFORMAÇÕES DA LOJA:
-            - Frete grátis acima de R$ 99,00
-            - Entrega: 3-7 dias úteis para todo Brasil
-            - Atendimento: Segunda a sábado, 8h às 20h
-            - Processamento: até 24h úteis
+            String systemPrompt = String.format("""
+        Você é um assistente inteligente da SupplementStore, especializada em suplementos.
 
-            COMO USAR:
-            - Whey: 1 scoop (30g) com água após treino
-            - BCAA: 5g antes e 5g após treino
-            - Creatina: 3-5g diariamente pós-treino
+        %s
 
-            Seja útil, amigável e use emojis. Foque em suplementos e informações da loja.
-            """;
+        %s
+
+        INSTRUÇÕES DE USO GERAIS:
+        - Whey Protein: 1 scoop (30g) com água após treino
+        - BCAA: 5g antes e 5g após treino
+        - Creatina: 3-5g diariamente pós-treino
+        - Outros: consulte instruções específicas
+
+        Seja útil, amigável e use emojis. Foque em suplementos e informações da loja.
+        Sempre mencione preços atualizados e incentive compras.
+        Destaque produtos em promoção e estoques limitados.
+        """, dynamicProducts, storeInfo);
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-3.5-turbo");
@@ -125,7 +131,7 @@ public class ChatBotController {
                     Map.of("role", "system", "content", systemPrompt),
                     Map.of("role", "user", "content", message)
             ));
-            requestBody.put("max_tokens", 300);
+            requestBody.put("max_tokens", 400);
             requestBody.put("temperature", 0.7);
 
             HttpHeaders headers = new HttpHeaders();

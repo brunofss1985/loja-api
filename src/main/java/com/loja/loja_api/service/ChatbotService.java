@@ -1,5 +1,6 @@
 package com.loja.loja_api.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,9 @@ public class ChatbotService {
 
     @Value("${openai.api.key:}")
     private String openaiApiKey;
+
+    @Autowired
+    private ProductChatService productChatService;
 
     private final RestTemplate restTemplate;
 
@@ -34,29 +38,36 @@ public class ChatbotService {
         }
 
         try {
-            String systemPrompt = """
+            // BUSCA PRODUTOS DINÂMICOS DO BANCO
+            String dynamicProducts = productChatService.getProductsForChatbot();
+            String storeInfo = productChatService.getStoreInfo();
+
+            System.out.println("=== PRODUTOS CARREGADOS DO BANCO: ===");
+            System.out.println(dynamicProducts);
+
+            String systemPrompt = String.format("""
             Você é um assistente inteligente da SupplementStore, loja especializada em suplementos.
 
-            PRODUTOS DISPONÍVEIS:
-            - Whey Protein Premium: R$ 89,90 - Proteína para ganho de massa muscular
-            - BCAA 2:1:1: R$ 45,90 - Aminoácidos para recuperação muscular
-            - Creatina Monohidratada: R$ 35,90 - Aumenta força e potência muscular
+            %s
 
-            INFORMAÇÕES DA LOJA:
-            - Frete grátis acima de R$ 99,00
-            - Entrega: 3-7 dias úteis para todo o Brasil
-            - Horário de atendimento: Segunda a sábado, 8h às 20h
-            - Processamento de pedidos: até 24h úteis
+            %s
 
-            INSTRUÇÕES DE USO:
-            - Whey: 1 scoop (30g) com água após o treino
-            - BCAA: 5g antes e 5g após o treino
+            INSTRUÇÕES DE USO GERAIS:
+            - Whey Protein: 1 scoop (30g) com água após o treino
+            - BCAA: 5g antes e 5g após o treino  
             - Creatina: 3-5g diariamente, preferencialmente pós-treino
+            - Outros suplementos: consulte as instruções específicas do produto
 
-            Seja sempre útil, amigável e focado em ajudar o cliente com informações sobre suplementos.
-            Responda de forma concisa e objetiva, usando emojis quando apropriado.
-            Se perguntarem sobre produtos que não temos, sugira alternativas dos nossos produtos.
-            """;
+            REGRAS IMPORTANTES:
+            - Seja sempre útil, amigável e focado em ajudar o cliente
+            - Responda de forma concisa e objetiva, usando emojis quando apropriado
+            - Se perguntarem sobre produtos que não temos, sugira alternativas dos nossos produtos
+            - Para informações específicas de produtos não listados, oriente a entrar em contato
+            - Sempre mencione preços atualizados quando disponíveis
+            - Incentive a compra destacando benefícios dos produtos
+            - Se houver produtos com estoque limitado, mencione a urgência
+            - Destaque produtos em promoção quando houver preço com desconto
+            """, dynamicProducts, storeInfo);
 
             Map<String, Object> requestBody = Map.of(
                     "model", "gpt-3.5-turbo",
@@ -64,7 +75,7 @@ public class ChatbotService {
                             Map.of("role", "system", "content", systemPrompt),
                             Map.of("role", "user", "content", userMessage)
                     ),
-                    "max_tokens", 300,
+                    "max_tokens", 400,
                     "temperature", 0.7
             );
 
@@ -91,7 +102,7 @@ public class ChatbotService {
                     Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
                     String content = (String) message.get("content");
 
-                    System.out.println("=== OPENAI RESPONDEU COM SUCESSO ===");
+                    System.out.println("=== OPENAI RESPONDEU COM DADOS DO BANCO ===");
                     return content;
                 }
             }
@@ -103,6 +114,4 @@ public class ChatbotService {
             throw new RuntimeException("Erro na API OpenAI: " + e.getMessage());
         }
     }
-
-    // MÉTODO REMOVIDO - processMessageLocal() não é mais usado
 }
