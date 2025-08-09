@@ -41,6 +41,7 @@ public class ProdutoService {
 
         try {
             existente.setNome(dto.getNome());
+            existente.setMarca(dto.getMarca());
             existente.setSlug(dto.getSlug());
             existente.setDescricao(dto.getDescricao());
             existente.setDescricaoCurta(dto.getDescricaoCurta());
@@ -136,6 +137,7 @@ public class ProdutoService {
 
         return Produto.builder()
                 .nome(dto.getNome())
+                .marca(dto.getMarca())
                 .slug(dto.getSlug())
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())

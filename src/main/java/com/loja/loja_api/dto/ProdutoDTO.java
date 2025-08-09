@@ -17,6 +17,7 @@ public class ProdutoDTO {
 
     // Dados principais
     private String nome;
+    private String marca;
     private String slug;
     private String descricao;
     private String descricaoCurta;

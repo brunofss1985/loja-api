@@ -24,6 +24,7 @@ public class Produto {
 
     // Dados gerais
     private String nome;
+    private String marca;
     private String slug;
 
     @Column(length = 1000)
