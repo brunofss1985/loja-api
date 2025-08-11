@@ -1,80 +1,63 @@
 package com.loja.loja_api.infra.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
-
-    @Autowired
-    private SecurityFilter securityFilter;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/chatbot/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/chatbot/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/public/chat/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/public/chat/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/test-public").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/simple").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/imagens/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/produtos").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/produtos/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/produtos/**").hasAuthority("ROLE_ADMIN")
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // Ajuste conforme sua lógica de autenticação
                 )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+                .cors(Customizer.withDefaults()) // Habilita CORS com configuração externa
+                .csrf(csrf -> csrf.disable()); // Desativa CSRF para APIs públicas
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(false);
-        config.setAllowedOrigins(List.of("*"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+        return http.build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
+//    @Bean
+//    public CorsFilter corsFilter() {
+//        CorsConfiguration config = new CorsConfiguration();
+//        config.setAllowCredentials(false);
+//        config.setAllowedOriginPatterns(Collections.singletonList("*"));
+//        config.setAllowedHeaders(Arrays.asList(
+//                "Origin", "Content-Type", "Accept", "Authorization",
+//                "Access-Control-Request-Method", "Access-Control-Request-Headers",
+//                "X-Requested-With", "Cache-Control", "*"
+//        ));
+//        config.setAllowedMethods(Arrays.asList(
+//                "GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"
+//        ));
+//        config.setExposedHeaders(Arrays.asList(
+//                "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Content-Type"
+//        ));
+//        config.setMaxAge(3600L);
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", config);
+//
+//        return new CorsFilter(source);
+//    }
 }
