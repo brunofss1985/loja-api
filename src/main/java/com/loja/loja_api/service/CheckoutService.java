@@ -1,9 +1,9 @@
 package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.CheckoutRequest;
-import com.loja.loja_api.model.*;
 import com.loja.loja_api.enums.OrderStatus;
 import com.loja.loja_api.enums.PaymentStatus;
+import com.loja.loja_api.model.*;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,9 +69,7 @@ public class CheckoutService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(accessToken);
-
-            String idempotencyKey = UUID.randomUUID().toString();
-            headers.set("X-Idempotency-Key", idempotencyKey);
+            headers.set("X-Idempotency-Key", UUID.randomUUID().toString());
 
             String cpfLimpo = order.getCustomer().getCpf().replaceAll("\\D", "");
 
@@ -104,13 +101,12 @@ public class CheckoutService {
 
                 payment.setQrCode(transactionData.getString("qr_code"));
                 payment.setQrCodeBase64(transactionData.getString("qr_code_base64"));
-                payment.setProviderPaymentId(String.valueOf(json.get("id"))); // ✅ Correção aqui
+                payment.setProviderPaymentId(String.valueOf(json.get("id")));
                 payment.setStatus(PaymentStatus.PENDING);
             } else {
                 throw new RuntimeException("Erro Mercado Pago: " + response.getBody());
             }
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Erro ao gerar Pix: " + e.getMessage());
         }
     }

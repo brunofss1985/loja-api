@@ -12,8 +12,8 @@ public class PaymentResponse {
     private Long paymentId;
     private PaymentStatus status;
     private String message;
-    private String qrCode;       // Pix "copia e cola"
-    private String qrCodeBase64; // Imagem do QR
+    private String qrCode;
+    private String qrCodeBase64;
     private String boletoUrl;
 
 }

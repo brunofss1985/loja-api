@@ -23,11 +23,8 @@ public class CheckoutController {
         return ResponseEntity.ok(resp);
     }
 
-    // Webhook do provedor (substitua por rota real do seu gateway)
     @PostMapping("/webhooks/payment")
     public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload) {
-        // TODO: validar assinatura, localizar payment por providerPaymentId,
-        // atualizar status para APPROVED/DECLINED e order.status para PAID se aprovado.
         return ResponseEntity.ok().build();
     }
 }

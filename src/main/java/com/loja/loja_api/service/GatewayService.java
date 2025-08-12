@@ -7,7 +7,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -25,27 +24,25 @@ public class GatewayService {
         headers.setBearerAuth(ACCESS_TOKEN);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("transaction_amount", 100.0);
-        body.put("description", "Pagamento via Pix");
-        body.put("payment_method_id", "pix"); // ou "bolbradesco" para boleto
-        body.put("payer", Map.of("email", "cliente@email.com"));
+        Map<String, Object> body = Map.of(
+                "transaction_amount", 100.0,
+                "description", "Pagamento via Pix",
+                "payment_method_id", "pix",
+                "payer", Map.of("email", "cliente@email.com")
+        );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
         try {
             JsonNode json = objectMapper.readTree(response.getBody());
-            System.out.println("[MP] Body: " + json);
 
             PagamentoResponse resp = new PagamentoResponse();
-
             JsonNode transactionData = json.path("point_of_interaction").path("transaction_data");
+
             resp.setQrCode(transactionData.path("qr_code").asText(null));
             resp.setQrCodeBase64(transactionData.path("qr_code_base64").asText(null));
-
-            JsonNode boletoNode = json.path("transaction_details").path("external_resource_url");
-            resp.setBoletoUrl(boletoNode.asText(null));
+            resp.setBoletoUrl(json.path("transaction_details").path("external_resource_url").asText(null));
 
             return resp;
         } catch (Exception e) {
