@@ -4,6 +4,7 @@ import com.loja.loja_api.dto.CheckoutRequest;
 import com.loja.loja_api.enums.OrderStatus;
 import com.loja.loja_api.enums.PaymentStatus;
 import com.loja.loja_api.model.*;
+import com.loja.loja_api.repositories.CustomerRepository;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class CheckoutService {
 
     private final OrderRepository orderRepo;
     private final PaymentRepository paymentRepo;
+    private final CustomerRepository customerRepo; // ✅ novo repositório para evitar duplicar cliente
 
     @Value("${mercadopago.token}")
     private String accessToken;
@@ -96,7 +98,6 @@ public class CheckoutService {
             if (response.getStatusCode().is2xxSuccessful()) {
                 JSONObject json = new JSONObject(response.getBody());
 
-                // ✅ Salvar o ID do pagamento do Mercado Pago
                 payment.setProviderPaymentId(json.get("id").toString());
 
                 JSONObject transactionData = json
@@ -114,24 +115,36 @@ public class CheckoutService {
         }
     }
 
-
     private void simulateBoleto(Payment payment, Order order) {
         payment.setStatus(PaymentStatus.PENDING);
     }
 
     private Order mapToOrder(CheckoutRequest req) {
+        Customer customer = customerRepo.findByEmail(req.getEmail())
+                .map(existing -> {
+                    // Se o cliente já existir, atualiza dados faltantes
+                    if (req.getCpf() != null && (existing.getCpf() == null || existing.getCpf().isBlank())) {
+                        existing.setCpf(req.getCpf());
+                    }
+                    if (req.getPhone() != null && (existing.getPhone() == null || existing.getPhone().isBlank())) {
+                        existing.setPhone(req.getPhone());
+                    }
+                    return existing;
+                })
+                .orElse(Customer.builder()
+                        .fullName(req.getFullName())
+                        .email(req.getEmail())
+                        .phone(req.getPhone())
+                        .cpf(req.getCpf())
+                        .build());
+
         Order order = Order.builder()
                 .subtotal(req.getSubtotal())
                 .shipping(req.getShipping())
                 .discount(req.getDiscount())
                 .total(req.getTotal())
                 .status(OrderStatus.CREATED)
-                .customer(Customer.builder()
-                        .fullName(req.getFullName())
-                        .email(req.getEmail())
-                        .phone(req.getPhone())
-                        .cpf(req.getCpf())
-                        .build())
+                .customer(customer)
                 .build();
 
         List<OrderItem> items = req.getItems().stream().map(i ->
@@ -146,6 +159,7 @@ public class CheckoutService {
         order.setItems(items);
         return order;
     }
+
 
     private String statusMessage(Payment payment) {
         return switch (payment.getStatus()) {
