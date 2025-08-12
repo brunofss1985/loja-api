@@ -14,4 +14,6 @@ public class PaymentResponse {
     private String message;
     private String qrCode;       // Pix "copia e cola"
     private String qrCodeBase64; // Imagem do QR
+    private String boletoUrl;
+
 }

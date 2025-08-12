@@ -1,22 +1,21 @@
 package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.CheckoutRequest;
-
-import com.loja.loja_api.model.Customer;
-import com.loja.loja_api.model.Order;
-import com.loja.loja_api.model.OrderItem;
-import com.loja.loja_api.model.Payment;
+import com.loja.loja_api.model.*;
 import com.loja.loja_api.enums.OrderStatus;
 import com.loja.loja_api.enums.PaymentStatus;
-
-import com.loja.loja_api.model.PaymentResponse;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.PaymentRepository;
-import com.loja.loja_api.util.QrGenerator;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +23,9 @@ public class CheckoutService {
 
     private final OrderRepository orderRepo;
     private final PaymentRepository paymentRepo;
+
+    @Value("${mercadopago.token}")
+    private String accessToken;
 
     public PaymentResponse checkout(CheckoutRequest req) {
         Order order = mapToOrder(req);
@@ -33,7 +35,7 @@ public class CheckoutService {
                 .order(order)
                 .method(req.getMethod())
                 .installments(req.getInstallments())
-                .provider("MOCK")
+                .provider("MERCADO_PAGO")
                 .status(PaymentStatus.PENDING)
                 .build();
 
@@ -62,12 +64,55 @@ public class CheckoutService {
     }
 
     private void buildPix(Payment payment, Order order) {
-        String pixPayload = "00020126580014BR.GOV.BCB.PIX0136pix@seudominio.com520400005303986540" +
-                order.getTotal().toPlainString().replace(".", "") +
-                "5802BR5920Sua Loja LTDA6009Sao Paulo62070503***6304ABCD";
-        payment.setQrCode(pixPayload);
-        payment.setQrCodeBase64(QrGenerator.pngBase64(pixPayload, 360, 360));
-        payment.setStatus(PaymentStatus.PENDING);
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(accessToken);
+
+            String idempotencyKey = UUID.randomUUID().toString();
+            headers.set("X-Idempotency-Key", idempotencyKey);
+
+            String cpfLimpo = order.getCustomer().getCpf().replaceAll("\\D", "");
+
+            JSONObject identification = new JSONObject();
+            identification.put("type", "CPF");
+            identification.put("number", cpfLimpo);
+
+            JSONObject payer = new JSONObject();
+            payer.put("email", order.getCustomer().getEmail());
+            payer.put("first_name", order.getCustomer().getFullName());
+            payer.put("identification", identification);
+
+            JSONObject body = new JSONObject();
+            body.put("transaction_amount", order.getTotal());
+            body.put("description", "Pedido #" + order.getId() + " - Suplementos");
+            body.put("payment_method_id", "pix");
+            body.put("payer", payer);
+
+            HttpEntity<String> entity = new HttpEntity<>(body.toString(), headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    "https://api.mercadopago.com/v1/payments", entity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                JSONObject json = new JSONObject(response.getBody());
+                JSONObject transactionData = json
+                        .getJSONObject("point_of_interaction")
+                        .getJSONObject("transaction_data");
+
+                payment.setQrCode(transactionData.getString("qr_code"));
+                payment.setQrCodeBase64(transactionData.getString("qr_code_base64"));
+                payment.setProviderPaymentId(String.valueOf(json.get("id"))); // ✅ Correção aqui
+                payment.setStatus(PaymentStatus.PENDING);
+            } else {
+                throw new RuntimeException("Erro Mercado Pago: " + response.getBody());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao gerar Pix: " + e.getMessage());
+        }
     }
 
     private void simulateBoleto(Payment payment, Order order) {
