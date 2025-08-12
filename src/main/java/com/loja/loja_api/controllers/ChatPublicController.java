@@ -12,11 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/public/chat")
-//@CrossOrigin(
-//        origins = "*",
-//        allowedHeaders = "*",
-//        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS}
-//)
+
 public class ChatPublicController {
 
     @Autowired
@@ -24,14 +20,11 @@ public class ChatPublicController {
 
     @PostMapping("/message")
     public ResponseEntity<ChatResponseDTO> sendMessage(@RequestBody ChatRequestDTO request) {
-        System.out.println("=== MENSAGEM RECEBIDA: " + request.getMessage() + " ===");
 
         // SEMPRE TENTA OPENAI PRIMEIRO - SEM CONDIÇÕES
         try {
-            System.out.println("=== FORÇANDO TENTATIVA OPENAI ===");
             String response = chatbotService.processMessage(request.getMessage());
 
-            System.out.println("=== ✅ SUCESSO OPENAI: " + response + " ===");
             return ResponseEntity.ok(new ChatResponseDTO(response, true));
 
         } catch (Exception e) {
@@ -47,14 +40,12 @@ public class ChatPublicController {
                     "**Horário**: Segunda a sábado, 8h às 20h\n\n" +
                     "Tente novamente em alguns minutos. Obrigado! 😊";
 
-            System.out.println("=== RESPOSTA DE ERRO ENVIADA ===");
             return ResponseEntity.ok(new ChatResponseDTO(errorMessage, false));
         }
     }
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
-        System.out.println("=== HEALTH ENDPOINT FUNCIONOU ===");
 
         boolean openaiConfigured = chatbotService.isOpenAIConfigured();
 

@@ -31,7 +31,6 @@ public class ChatbotService {
     }
 
     public String processMessage(String userMessage) {
-        System.out.println("=== PROCESSANDO MENSAGEM VIA OPENAI ===");
 
         if (!isOpenAIConfigured()) {
             throw new RuntimeException("OpenAI API key não configurada");
@@ -42,8 +41,6 @@ public class ChatbotService {
             String dynamicProducts = productChatService.getProductsForChatbot();
             String storeInfo = productChatService.getStoreInfo();
 
-            System.out.println("=== PRODUTOS CARREGADOS DO BANCO: ===");
-            System.out.println(dynamicProducts);
 
             String systemPrompt = String.format("""
             Você é um assistente inteligente da SupplementStore, loja especializada em suplementos.
@@ -102,7 +99,6 @@ public class ChatbotService {
                     Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
                     String content = (String) message.get("content");
 
-                    System.out.println("=== OPENAI RESPONDEU COM DADOS DO BANCO ===");
                     return content;
                 }
             }

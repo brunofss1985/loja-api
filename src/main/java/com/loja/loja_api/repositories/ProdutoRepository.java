@@ -9,9 +9,8 @@ import java.util.List;
 
 @Transactional(readOnly = true)
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
-    List<Produto> findByCategoriaIgnoreCase(String categoria);
 
-    // Adicione estes métodos na interface ProdutoRepository:
+    List<Produto> findByCategoriaIgnoreCase(String categoria);
 
     List<Produto> findByAtivoTrue();
 

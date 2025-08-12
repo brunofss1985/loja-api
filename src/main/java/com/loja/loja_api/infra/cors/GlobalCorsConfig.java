@@ -15,14 +15,8 @@ public class GlobalCorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-
-        // MANTIDO desabilitado para compatibilidade
         config.setAllowCredentials(false);
-
-        // Permite todas as origens (funciona porque credentials=false)
         config.setAllowedOriginPatterns(Collections.singletonList("*"));
-
-        // Headers específicos mais comuns do Angular + genérico
         config.setAllowedHeaders(Arrays.asList(
                 "Origin",
                 "Content-Type",
@@ -32,10 +26,8 @@ public class GlobalCorsConfig {
                 "Access-Control-Request-Headers",
                 "X-Requested-With",
                 "Cache-Control",
-                "*" // Fallback para qualquer header
+                "*"
         ));
-
-        // Métodos HTTP completos
         config.setAllowedMethods(Arrays.asList(
                 "GET",
                 "POST",
@@ -45,18 +37,13 @@ public class GlobalCorsConfig {
                 "HEAD",
                 "PATCH"
         ));
-
-        // Headers expostos para o frontend
         config.setExposedHeaders(Arrays.asList(
                 "Access-Control-Allow-Origin",
                 "Access-Control-Allow-Credentials",
                 "Content-Type"
         ));
-
-        // Cache do preflight (1 hora)
         config.setMaxAge(3600L);
 
-        // Aplica para todas as rotas
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 

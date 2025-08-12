@@ -14,11 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/chatbot")
-//@CrossOrigin(
-//        origins = "*",
-//        allowedHeaders = "*",
-//        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS}
-//)
+
 public class ChatBotController {
 
     @Value("${openai.api.key:}")
@@ -31,7 +27,6 @@ public class ChatBotController {
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
-        System.out.println("=== HEALTH ENDPOINT FUNCIONOU ===");
 
         Map<String, Object> response = new HashMap<>();
         response.put("service", "chatbot");
@@ -45,14 +40,10 @@ public class ChatBotController {
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, String> request) {
         String userMessage = request.get("message");
-        System.out.println("=== MENSAGEM RECEBIDA: " + userMessage + " ===");
 
         // SEMPRE TENTA OPENAI - SEM VERIFICAÇÕES PRÉVIAS
         try {
-            System.out.println("=== FORÇANDO CHAMADA OPENAI ===");
             String aiResponse = callOpenAI(userMessage);
-
-            System.out.println("=== ✅ SUCESSO OPENAI: " + aiResponse + " ===");
 
             Map<String, Object> response = new HashMap<>();
             response.put("response", aiResponse);
@@ -62,7 +53,6 @@ public class ChatBotController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.err.println("=== ❌ OPENAI FALHOU: " + e.getMessage() + " ===");
 
             // MENSAGEM DE ERRO ESPECÍFICA
             String errorMessage = "⚠️ **Assistente temporariamente indisponível**\n\n" +
@@ -78,7 +68,6 @@ public class ChatBotController {
             errorResponse.put("source", "error");
             errorResponse.put("timestamp", LocalDateTime.now());
 
-            System.out.println("=== RESPOSTA DE ERRO ENVIADA ===");
             return ResponseEntity.ok(errorResponse);
         }
     }
@@ -93,8 +82,6 @@ public class ChatBotController {
     private ProductChatService productChatService;
 
     private String callOpenAI(String message) {
-        System.out.println("=== INICIANDO CHAMADA OPENAI COM CHAVE: " +
-                (openaiApiKey != null ? openaiApiKey.substring(0, 7) + "..." : "NULL") + " ===");
 
         if (!isOpenAIConfigured()) {
             throw new RuntimeException("API Key da OpenAI não configurada corretamente");
@@ -105,7 +92,6 @@ public class ChatBotController {
             String dynamicProducts = productChatService.getProductsForChatbot();
             String storeInfo = productChatService.getStoreInfo();
 
-            System.out.println("=== PRODUTOS DO BANCO CARREGADOS ===");
 
             String systemPrompt = String.format("""
         Você é um assistente inteligente da SupplementStore, especializada em suplementos.
@@ -140,8 +126,6 @@ public class ChatBotController {
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            System.out.println("=== ENVIANDO REQUISIÇÃO PARA OPENAI ===");
-
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     openaiApiUrl,
                     entity,
@@ -160,7 +144,6 @@ public class ChatBotController {
                     Map<String, Object> messageObj = (Map<String, Object>) firstChoice.get("message");
 
                     String content = (String) messageObj.get("content");
-                    System.out.println("=== RESPOSTA OPENAI RECEBIDA: " + content + " ===");
                     return content;
                 }
             }

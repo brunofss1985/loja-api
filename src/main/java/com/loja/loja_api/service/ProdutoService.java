@@ -30,7 +30,6 @@ public class ProdutoService {
         return repository.findByCategoriaIgnoreCase(categoria);
     }
 
-
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto produto = construirProduto(dto, imagem, galeriaArquivos);
         return repository.save(produto);

@@ -9,6 +9,5 @@ public class TestController {
 
     @GetMapping("/test")
     public ResponseEntity<String> testChat() {
-        System.out.println("=== CHAT TEST FUNCIONOU ===");
         return ResponseEntity.ok("Chat endpoint funcionando!");
     }}

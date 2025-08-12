@@ -25,7 +25,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")  // 👈 Somente ADMIN acessa
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
