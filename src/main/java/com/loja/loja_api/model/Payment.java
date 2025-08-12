@@ -33,18 +33,19 @@ public class Payment {
     private Integer installments;
 
     @Lob
-    private String qrCode; // texto Pix (EMV) ou copia e cola
+    private String qrCode;
 
     @Lob
-    private String qrCodeBase64; // imagem base64 para exibir
+    private String qrCodeBase64;
 
     private Instant createdAt;
     private Instant updatedAt;
 
     @PrePersist
     void prePersist() {
-        createdAt = Instant.now();
-        updatedAt = createdAt;
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
         if (status == null) status = PaymentStatus.PENDING;
     }
 
