@@ -20,6 +20,7 @@ public class Payment {
     private Long id;
 
     @OneToOne
+    @JoinColumn(name = "order_id")
     private Order order;
 
     @Enumerated(EnumType.STRING)
@@ -28,8 +29,8 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
-    private String provider;
-    private String providerPaymentId;
+    private String provider; // Ex: MERCADO_PAGO
+    private String providerPaymentId; // ID retornado pelo Mercado Pago
     private Integer installments;
 
     @Lob
@@ -40,6 +41,8 @@ public class Payment {
 
     private Instant createdAt;
     private Instant updatedAt;
+
+    private Instant confirmedAt; // ✅ Data de confirmação do pagamento
 
     @PrePersist
     void prePersist() {

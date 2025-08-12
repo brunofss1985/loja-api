@@ -4,11 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "customers")
+@Table(name = "clientes")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Customer {
 
     @Id
@@ -16,7 +16,7 @@ public class Customer {
     private Long id;
 
     private String fullName;
-    private String email;
-    private String phone;
     private String cpf;
+    private String email;
+    private String phone; // ✅ Adicionado campo phone
 }

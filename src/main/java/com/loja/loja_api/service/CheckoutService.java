@@ -95,13 +95,16 @@ public class CheckoutService {
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 JSONObject json = new JSONObject(response.getBody());
+
+                // ✅ Salvar o ID do pagamento do Mercado Pago
+                payment.setProviderPaymentId(json.get("id").toString());
+
                 JSONObject transactionData = json
                         .getJSONObject("point_of_interaction")
                         .getJSONObject("transaction_data");
 
-                payment.setQrCode(transactionData.getString("qr_code"));
-                payment.setQrCodeBase64(transactionData.getString("qr_code_base64"));
-                payment.setProviderPaymentId(String.valueOf(json.get("id")));
+                payment.setQrCode(transactionData.optString("qr_code", null));
+                payment.setQrCodeBase64(transactionData.optString("qr_code_base64", null));
                 payment.setStatus(PaymentStatus.PENDING);
             } else {
                 throw new RuntimeException("Erro Mercado Pago: " + response.getBody());
@@ -110,6 +113,7 @@ public class CheckoutService {
             throw new RuntimeException("Erro ao gerar Pix: " + e.getMessage());
         }
     }
+
 
     private void simulateBoleto(Payment payment, Order order) {
         payment.setStatus(PaymentStatus.PENDING);
