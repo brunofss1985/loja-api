@@ -1,11 +1,10 @@
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.model.User;
-import com.loja.loja_api.repositories.UserRepository;
+import com.loja.loja_api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,48 +14,63 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getUser() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var user = (User) authentication.getPrincipal();
+        var user = userService.getCurrentUser();
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    }
 
-        return ResponseEntity.ok(user);
+    @PutMapping("/me")
+    public ResponseEntity<User> updateOwnProfile(@RequestBody User updatedUser) {
+        var currentUser = userService.getCurrentUser();
+        if (currentUser == null) return ResponseEntity.status(401).build();
+
+        return userService.getById(currentUser.getId())
+                .map(existing -> {
+                    existing.setName(updatedUser.getName());
+                    existing.setPhone(updatedUser.getPhone());
+                    existing.setAddress(updatedUser.getAddress());
+                    existing.setCredits(updatedUser.getCredits());
+                    existing.setPoints(updatedUser.getPoints());
+                    return ResponseEntity.ok(userService.createUser(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<User> getByEmail(@PathVariable String email) {
+        return userService.getByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userRepository.findAll());
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userRepository.save(user));
+        return ResponseEntity.ok(userService.createUser(user));
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
-        return userRepository.findById(id)
-                .map(existing -> {
-                    existing.setName(updatedUser.getName());
-                    existing.setEmail(updatedUser.getEmail());
-                    existing.setUserType(updatedUser.getUserType());
-                    return ResponseEntity.ok(userRepository.save(existing));
-                })
+        return userService.updateUser(id, updatedUser)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        if (!userRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        userRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+        return userService.deleteUser(id)
+                ? ResponseEntity.ok().build()
+                : ResponseEntity.notFound().build();
     }
 }

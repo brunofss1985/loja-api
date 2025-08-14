@@ -3,6 +3,7 @@ package com.loja.loja_api.model;
 import com.loja.loja_api.domain.user.UserType;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,4 +24,19 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserType userType;
+
+    private String phone;
+    private String address;
+
+    private Integer points;
+    private Double credits;
+
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        if (this.points == null) this.points = 0;
+        if (this.credits == null) this.credits = 0.0;
+    }
 }
