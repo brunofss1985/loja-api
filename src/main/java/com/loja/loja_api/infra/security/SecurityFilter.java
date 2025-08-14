@@ -1,6 +1,8 @@
 package com.loja.loja_api.infra.security;
 
+import com.loja.loja_api.model.Session;
 import com.loja.loja_api.model.User;
+import com.loja.loja_api.repositories.SessionRepository;
 import com.loja.loja_api.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,7 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -24,6 +28,9 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SessionRepository sessionRepository;
 
     @Override
     protected void doFilterInternal(
@@ -40,20 +47,45 @@ public class SecurityFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (path.startsWith("/chatbot") || path.startsWith("/public/chat")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (path.startsWith("/auth/")) {
+        if (path.startsWith("/chatbot") || path.startsWith("/public/chat") || path.startsWith("/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = recoverToken(request);
-        String email = tokenService.validateToken(token);
+        if (token == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        // 🔐 Valida JWT
+        String email = tokenService.validateToken(token);
+        if (email == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        // 🔍 Valida sessão
+        Optional<Session> sessionOpt = sessionRepository.findByJwtTokenAndActiveTrue(token);
+        if (sessionOpt.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        Session session = sessionOpt.get();
+        if (session.getLastActivity().isBefore(LocalDateTime.now().minusMinutes(30))) {
+            session.setActive(false);
+            sessionRepository.save(session);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        // ✅ Atualiza atividade
+        session.setLastActivity(LocalDateTime.now());
+        sessionRepository.save(session);
+
+        // 👤 Autentica usuário
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
