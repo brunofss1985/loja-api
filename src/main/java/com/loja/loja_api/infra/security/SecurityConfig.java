@@ -23,12 +23,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable());
+                .authorizeHttpRequests(auth -> auth
+                        // Rotas públicas que não precisam de autenticação
+                        .requestMatchers("/checkout", "/checkout/**").permitAll() // ✅ Permite acesso ao endpoint de checkout e webhooks
+                        .requestMatchers("/api/produtos/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/chatbot/**").permitAll()
+                        .requestMatchers("/webhooks/**").permitAll()
+                        // Rotas privadas que exigem autenticação
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -39,61 +39,49 @@ public class SecurityFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        if (method.equals("GET") && path.startsWith("/api/produtos")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (path.startsWith("/chatbot") || path.startsWith("/public/chat") || path.startsWith("/auth/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String token = recoverToken(request);
-        if (token == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+        if (token != null) {
+            try {
+                // 🔐 Valida JWT
+                String email = tokenService.validateToken(token);
+                if (email == null) {
+                    throw new RuntimeException("Token JWT inválido ou expirado.");
+                }
 
-        // 🔐 Valida JWT
-        String email = tokenService.validateToken(token);
-        if (email == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+                // 🔍 Valida sessão no banco
+                Optional<Session> sessionOpt = sessionRepository.findByJwtTokenAndActiveTrue(token);
+                if (sessionOpt.isEmpty()) {
+                    throw new RuntimeException("Sessão não encontrada ou inativa.");
+                }
 
-        // 🔍 Valida sessão
-        Optional<Session> sessionOpt = sessionRepository.findByJwtTokenAndActiveTrue(token);
-        if (sessionOpt.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+                Session session = sessionOpt.get();
+                if (session.getLastActivity().isBefore(LocalDateTime.now().minusMinutes(30))) {
+                    session.setActive(false);
+                    sessionRepository.save(session);
+                    throw new RuntimeException("Sessão expirada por inatividade.");
+                }
 
-        Session session = sessionOpt.get();
-        if (session.getLastActivity().isBefore(LocalDateTime.now().minusMinutes(30))) {
-            session.setActive(false);
-            sessionRepository.save(session);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+                // ✅ Atualiza atividade
+                session.setLastActivity(LocalDateTime.now());
+                sessionRepository.save(session);
 
-        // ✅ Atualiza atividade
-        session.setLastActivity(LocalDateTime.now());
-        sessionRepository.save(session);
+                // 👤 Autentica usuário
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
-        // 👤 Autentica usuário
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                String role = "ROLE_" + user.getUserType().name();
+                var authorities = List.of(new SimpleGrantedAuthority(role));
 
-            String role = "ROLE_" + user.getUserType().name();
-            var authorities = List.of(new SimpleGrantedAuthority(role));
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                // Se o token for inválido, a requisição continua, mas sem autenticação
+                // As rotas protegidas retornarão 403 Forbidden
+                // O filtro não deve abortar, pois o SecurityFilterChain decide
+                // se a rota precisa de autenticação ou não.
+                System.err.println("Falha na autenticação do token: " + e.getMessage());
+            }
         }
 
         filterChain.doFilter(request, response);
