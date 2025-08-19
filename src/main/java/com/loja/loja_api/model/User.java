@@ -1,6 +1,6 @@
 package com.loja.loja_api.model;
 
-import com.loja.loja_api.domain.user.UserType;
+import com.loja.loja_api.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

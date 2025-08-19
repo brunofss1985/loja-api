@@ -1,4 +1,4 @@
-package com.loja.loja_api.domain.user;
+package com.loja.loja_api.enums;
 
 public enum UserType {
     USER,
