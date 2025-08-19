@@ -23,7 +23,8 @@ public class CheckoutService {
 
     private final OrderRepository orderRepo;
     private final PaymentRepository paymentRepo;
-    private final CustomerRepository customerRepo; // ✅ novo repositório para evitar duplicar cliente
+    private final CustomerRepository customerRepo;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${mercadopago.token}")
     private String accessToken;
@@ -66,8 +67,6 @@ public class CheckoutService {
 
     private void buildPix(Payment payment, Order order) {
         try {
-            RestTemplate restTemplate = new RestTemplate();
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(accessToken);
@@ -116,13 +115,13 @@ public class CheckoutService {
     }
 
     private void simulateBoleto(Payment payment, Order order) {
+        // TODO: Simular a geração de um boleto
         payment.setStatus(PaymentStatus.PENDING);
     }
 
     private Order mapToOrder(CheckoutRequest req) {
         Customer customer = customerRepo.findByEmail(req.getEmail())
                 .map(existing -> {
-                    // Se o cliente já existir, atualiza dados faltantes
                     if (req.getCpf() != null && (existing.getCpf() == null || existing.getCpf().isBlank())) {
                         existing.setCpf(req.getCpf());
                     }
@@ -159,7 +158,6 @@ public class CheckoutService {
         order.setItems(items);
         return order;
     }
-
 
     private String statusMessage(Payment payment) {
         return switch (payment.getStatus()) {

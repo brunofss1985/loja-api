@@ -21,25 +21,23 @@ public class WebhookController {
     @PostMapping
     public ResponseEntity<Void> receberNotificacao(@RequestBody Map<String, Object> payload) {
         try {
-            String type = (String) payload.get("type");
-            if (!"payment".equalsIgnoreCase(type)) {
-                logger.warn("Webhook ignorado: tipo não é 'payment' → {}", type);
+            String topic = (String) payload.get("topic");
+            String resource = (String) payload.get("resource");
+
+            if (!"payment".equalsIgnoreCase(topic) || resource == null || resource.isBlank()) {
+                logger.warn("Webhook ignorado: tópico '{}' inválido ou resource ausente.", topic);
                 return ResponseEntity.ok().build();
             }
 
-            Map<String, Object> data = (Map<String, Object>) payload.get("data");
-            if (data == null || !data.containsKey("id")) {
-                logger.warn("Webhook inválido: campo 'data.id' ausente");
-                return ResponseEntity.badRequest().build();
-            }
+            // O ID do recurso vem como uma URL, ex: https://api.mercadopago.com/v1/payments/12345
+            // Extraímos o ID no final da string
+            Long mercadoPagoPaymentId = Long.valueOf(resource.substring(resource.lastIndexOf("/") + 1));
 
-            Long mercadoPagoPaymentId = Long.valueOf(data.get("id").toString());
-
-            webhookService.confirmarPagamento(mercadoPagoPaymentId);
+            webhookService.processPaymentWebhook(mercadoPagoPaymentId);
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            logger.error("Erro ao processar webhook", e);
+            logger.error("Erro ao processar webhook: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

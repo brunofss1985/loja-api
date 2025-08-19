@@ -3,7 +3,10 @@ package com.loja.loja_api.model;
 import com.loja.loja_api.enums.PaymentMethod;
 import com.loja.loja_api.enums.PaymentStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -29,8 +32,8 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
-    private String provider; // Ex: MERCADO_PAGO
-    private String providerPaymentId; // ID retornado pelo Mercado Pago
+    private String provider;
+    private String providerPaymentId;
     private Integer installments;
 
     @Lob
@@ -41,8 +44,7 @@ public class Payment {
 
     private Instant createdAt;
     private Instant updatedAt;
-
-    private Instant confirmedAt; // ✅ Data de confirmação do pagamento
+    private Instant confirmedAt;
 
     @PrePersist
     void prePersist() {
