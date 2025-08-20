@@ -22,6 +22,8 @@ public class OrderItem {
     private String name;
     private Integer quantity;
     private BigDecimal price;
+    private String imageUrl;
+    private String variation;
 
     @ManyToOne
     @JoinColumn(name = "order_id")

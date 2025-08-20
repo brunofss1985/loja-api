@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -30,6 +31,17 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    private String paymentMethod;
+    private String deliveryMethod;
+    private String estimatedDelivery;
+    private String trackingCode;
+    private String notes;
+    private Boolean isGift;
+    private String giftMessage;
+
+    private Instant createdAt;
+    private Instant updatedAt;
+
     @ManyToOne(cascade = CascadeType.ALL)
     private Customer customer;
 
@@ -37,8 +49,8 @@ public class Order {
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
-    private Instant createdAt;
-    private Instant updatedAt;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderStatusHistory> statusHistory = new ArrayList<>();
 
     @PrePersist
     void prePersist() {

@@ -3,20 +3,24 @@ package com.loja.loja_api.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
-@Table(name = "clientes")
+@Table(name = "order_status_history")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Customer {
+public class OrderStatusHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String fullName;
-    private String cpf;
-    private String email;
-    private String phone;
+    private String status;
+    private Instant changedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 }
