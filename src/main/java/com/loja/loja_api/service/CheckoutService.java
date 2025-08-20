@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,9 +36,12 @@ public class CheckoutService {
     @Value("${mercadopago.token}")
     private String accessToken;
 
+    private static final DateTimeFormatter MP_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
     @Transactional
     public PaymentResponse checkout(CheckoutRequest req) {
-        // Passo 1: Encontrar ou criar o cliente
+        // 1. Encontrar ou criar cliente
         Customer customer = customerRepo.findByEmail(req.getEmail())
                 .orElseGet(() -> {
                     Customer newCustomer = Customer.builder()
@@ -48,10 +53,11 @@ public class CheckoutService {
                     return customerRepo.save(newCustomer);
                 });
 
-        // Passo 2: Mapear o pedido com o cliente
+        // 2. Criar pedido
         Order order = mapToOrder(req, customer);
         order = orderRepo.save(order);
 
+        // 3. Criar pagamento
         Payment payment = Payment.builder()
                 .order(order)
                 .method(req.getMethod())
@@ -107,11 +113,14 @@ public class CheckoutService {
         return order;
     }
 
+    // =============================
+    // PAGAMENTO COM CARTÃO
+    // =============================
+    // =============================
+// PAGAMENTO COM CARTÃO
+// =============================
     private PaymentResponse processCardPayment(CheckoutRequest req, Payment payment, Order order) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(accessToken);
-        headers.set("X-Idempotency-Key", UUID.randomUUID().toString());
+        HttpHeaders headers = baseHeaders();
 
         JSONObject payer = new JSONObject();
         payer.put("email", req.getEmail());
@@ -119,9 +128,16 @@ public class CheckoutService {
         JSONObject body = new JSONObject();
         body.put("transaction_amount", order.getTotal());
         body.put("description", "Pagamento de Pedido #" + order.getId());
-        body.put("payment_method_id", req.getMethod().name().toLowerCase());
+
+        // ⚠️ Usa o paymentMethodId do request (visa, master, elo...)
+        body.put("payment_method_id", req.getPaymentMethodId());
+
+        // Token gerado pelo SDK do MP no frontend
         body.put("token", req.getCardToken());
-        body.put("installments", req.getInstallments());
+
+        // Parcelas
+        body.put("installments", req.getInstallments() != null ? req.getInstallments() : 1);
+
         body.put("payer", payer);
 
         HttpEntity<String> entity = new HttpEntity<>(body.toString(), headers);
@@ -160,14 +176,19 @@ public class CheckoutService {
         }
     }
 
+
+
+    // =============================
+    // PIX
+    // =============================
     private PaymentResponse processPixPayment(CheckoutRequest req, Payment payment, Order order) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(accessToken);
-            headers.set("X-Idempotency-Key", UUID.randomUUID().toString());
+            HttpHeaders headers = baseHeaders();
 
             String cpfLimpo = order.getCustomer().getCpf().replaceAll("\\D", "");
+            String[] fullNameParts = order.getCustomer().getFullName().split(" ", 2);
+            String firstName = fullNameParts[0];
+            String lastName = fullNameParts.length > 1 ? fullNameParts[1] : "Cliente";
 
             JSONObject identification = new JSONObject();
             identification.put("type", "CPF");
@@ -175,14 +196,20 @@ public class CheckoutService {
 
             JSONObject payer = new JSONObject();
             payer.put("email", order.getCustomer().getEmail());
-            payer.put("first_name", order.getCustomer().getFullName());
+            payer.put("first_name", firstName);
+            payer.put("last_name", lastName);
             payer.put("identification", identification);
 
             JSONObject body = new JSONObject();
             body.put("transaction_amount", order.getTotal());
-            body.put("description", "Pedido #" + order.getId() + " - Suplementos");
+            body.put("description", "Pedido #" + order.getId());
             body.put("payment_method_id", "pix");
             body.put("payer", payer);
+
+            // Expiração: 24h no formato correto
+            body.put("date_of_expiration", OffsetDateTime.now()
+                    .plusDays(1)
+                    .format(MP_DATE_FORMAT));
 
             HttpEntity<String> entity = new HttpEntity<>(body.toString(), headers);
 
@@ -210,18 +237,18 @@ public class CheckoutService {
                         .message(statusMessage(payment))
                         .build();
             } else {
-                throw new RuntimeException("Erro Mercado Pago: " + response.getBody());
+                throw new RuntimeException("Erro Mercado Pago (Pix): " + response.getBody());
             }
         } catch (Exception e) {
             throw new RuntimeException("Erro ao gerar Pix: " + e.getMessage());
         }
     }
 
+    // =============================
+    // BOLETO
+    // =============================
     private PaymentResponse processBoletoPayment(CheckoutRequest req, Payment payment, Order order) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(accessToken);
-        headers.set("X-Idempotency-Key", UUID.randomUUID().toString());
+        HttpHeaders headers = baseHeaders();
 
         JSONObject body = new JSONObject();
         body.put("transaction_amount", order.getTotal());
@@ -250,11 +277,15 @@ public class CheckoutService {
         address.put("city", req.getCity());
         address.put("federal_unit", req.getState());
         payer.put("address", address);
+
         body.put("payer", payer);
 
-        HttpEntity<String> entity = new HttpEntity<>(body.toString(), headers);
+        // Expira em 3 dias
+        body.put("date_of_expiration", OffsetDateTime.now()
+                .plusDays(3)
+                .format(MP_DATE_FORMAT));
 
-        System.out.println("JSON enviado para o Mercado Pago: " + body.toString());
+        HttpEntity<String> entity = new HttpEntity<>(body.toString(), headers);
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(
@@ -282,8 +313,19 @@ public class CheckoutService {
                 throw new RuntimeException("Erro ao gerar boleto: " + response.getBody());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Erro de comunicação com a API do Mercado Pago: " + e.getMessage());
+            throw new RuntimeException("Erro de comunicação com a API do Mercado Pago (boleto): " + e.getMessage());
         }
+    }
+
+    // =============================
+    // HELPERS
+    // =============================
+    private HttpHeaders baseHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+        headers.set("X-Idempotency-Key", UUID.randomUUID().toString());
+        return headers;
     }
 
     private String statusMessage(Payment payment) {

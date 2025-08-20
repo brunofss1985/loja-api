@@ -62,10 +62,13 @@ public class CheckoutRequest {
 
     // Pagamento
     @NotNull
-    private PaymentMethod method;
+    private PaymentMethod method; // CREDIT, DEBIT, PIX, BOLETO
 
     private Integer installments;
 
-    // Token do cartão de crédito (gerado no frontend)
+    // Token do cartão (gerado no front pelo MP)
     private String cardToken;
+
+    // Bandeira do cartão (visa, master, elo, amex, etc.)
+    private String paymentMethodId;
 }
