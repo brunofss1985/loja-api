@@ -2,9 +2,7 @@ package com.loja.loja_api.dto;
 
 import com.loja.loja_api.enums.PaymentMethod;
 import jakarta.validation.constraints.*;
-
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -68,9 +66,6 @@ public class CheckoutRequest {
 
     private Integer installments;
 
-    // Produção: token do cartão
+    // Token do cartão de crédito (gerado no frontend)
     private String cardToken;
-
-    // Dev: simulação
-    private String cardLast4;
 }

@@ -42,6 +42,9 @@ public class Payment {
     @Lob
     private String qrCodeBase64;
 
+    @Lob // Adicionado para armazenar a URL do boleto
+    private String boletoUrl;
+
     private Instant createdAt;
     private Instant updatedAt;
     private Instant confirmedAt;

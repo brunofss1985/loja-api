@@ -8,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/checkout")
 @RequiredArgsConstructor
@@ -21,10 +19,5 @@ public class CheckoutController {
     public ResponseEntity<PaymentResponse> checkout(@Valid @RequestBody CheckoutRequest req) {
         PaymentResponse resp = checkoutService.checkout(req);
         return ResponseEntity.ok(resp);
-    }
-
-    @PostMapping("/webhooks/payment")
-    public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload) {
-        return ResponseEntity.ok().build();
     }
 }
