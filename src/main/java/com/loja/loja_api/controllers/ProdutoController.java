@@ -20,22 +20,21 @@ public class ProdutoController {
     private ProdutoService service;
 
     @GetMapping
-    public ResponseEntity<Page<Produto>> listarTodos(
+    public ResponseEntity<Page<Produto>> listarComFiltros(
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) List<String> marcas,
+            @RequestParam(defaultValue = "0.0") double minPreco,
+            @RequestParam(defaultValue = "999999.99") double maxPreco,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<Produto> produtos = service.listarTodosPaginado(page, size);
+        Page<Produto> produtos = service.buscarProdutosComFiltros(categoria, marcas, minPreco, maxPreco, page, size);
         return ResponseEntity.ok(produtos);
     }
 
-    @GetMapping("/categoria/{categoria}")
-    public ResponseEntity<Page<Produto>> buscarPorCategoria(
-            @PathVariable String categoria,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Page<Produto> produtos = service.buscarPorCategoriaPaginado(categoria, page, size);
-        return ResponseEntity.ok(produtos);
+    @GetMapping("/marcas")
+    public ResponseEntity<List<String>> listarMarcas() {
+        return ResponseEntity.ok(service.listarMarcas());
     }
 
     @GetMapping("/{id}")

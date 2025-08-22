@@ -40,6 +40,8 @@ public class SecurityFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String token = recoverToken(request);
+
+        // Verifica se há um token, se não houver, a requisição continua sem autenticação
         if (token != null) {
             try {
                 // 🔐 Valida JWT
@@ -76,14 +78,15 @@ public class SecurityFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
-                // Se o token for inválido, a requisição continua, mas sem autenticação
-                // As rotas protegidas retornarão 403 Forbidden
-                // O filtro não deve abortar, pois o SecurityFilterChain decide
-                // se a rota precisa de autenticação ou não.
+                // Se houver qualquer falha na validação do token, o SecurityContextHolder
+                // será limpo para garantir que a requisição não seja autenticada erroneamente.
+                SecurityContextHolder.clearContext();
                 System.err.println("Falha na autenticação do token: " + e.getMessage());
             }
         }
 
+        // A requisição continua para o próximo filtro, que será o Spring Security
+        // para checar as regras de autorização definidas no SecurityConfig
         filterChain.doFilter(request, response);
     }
 

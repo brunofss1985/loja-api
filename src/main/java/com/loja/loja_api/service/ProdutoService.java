@@ -8,11 +8,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.Optional;
 
 @Service
 public class ProdutoService {
@@ -20,26 +23,47 @@ public class ProdutoService {
     @Autowired
     private ProdutoRepository repository;
 
+    @Transactional(readOnly = true)
     public Page<Produto> listarTodosPaginado(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return repository.findAll(pageable);
     }
 
-    public Page<Produto> buscarPorCategoriaPaginado(String categoria, int page, int size) {
+    @Transactional(readOnly = true)
+    public Page<Produto> buscarProdutosComFiltros(String categoria, List<String> marcas, Double minPreco, Double maxPreco, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return repository.findByCategoriaIgnoreCase(categoria, pageable);
+
+        // Se a categoria for "todos" ou "creatina", "whey", etc., tratamos como null para a busca geral
+        String categoriaFiltro = ("todos".equalsIgnoreCase(categoria) || categoria == null) ? null : categoria;
+
+        // ✨ LÓGICA CORRIGIDA: Usa o método de repositório apropriado com base na lista de marcas
+        if (marcas == null || marcas.isEmpty()) {
+            // Se a lista de marcas estiver vazia, chama a consulta que não filtra por marca
+            return repository.findByFiltersWithoutMarcas(categoriaFiltro, minPreco, maxPreco, pageable);
+        } else {
+            // Se a lista de marcas não estiver vazia, chama a consulta que filtra por marca
+            return repository.findByFilters(categoriaFiltro, marcas, minPreco, maxPreco, pageable);
+        }
     }
 
+    @Transactional(readOnly = true)
+    public List<String> listarMarcas() {
+        return repository.findDistinctMarcas();
+    }
+
+    @Transactional(readOnly = true)
     public Produto buscarPorId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
     }
 
+    @Transactional
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto produto = construirProduto(dto, imagem, galeriaArquivos);
         return repository.save(produto);
     }
 
+    @Transactional
     public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto existente = buscarPorId(id);
 
@@ -109,6 +133,7 @@ public class ProdutoService {
         }
     }
 
+    @Transactional
     public void deletar(Long id) {
         Produto produto = buscarPorId(id);
         repository.delete(produto);
