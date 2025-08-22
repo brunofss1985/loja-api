@@ -4,6 +4,7 @@ import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.service.ProdutoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,16 +20,23 @@ public class ProdutoController {
     private ProdutoService service;
 
     @GetMapping
-    public ResponseEntity<List<Produto>> listarTodos() {
-        return ResponseEntity.ok(service.listarTodos());
-    }
+    public ResponseEntity<Page<Produto>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-    @GetMapping("/categoria/{categoria}")
-    public ResponseEntity<List<Produto>> buscarPorCategoria(@PathVariable String categoria) {
-        List<Produto> produtos = service.buscarPorCategoria(categoria);
+        Page<Produto> produtos = service.listarTodosPaginado(page, size);
         return ResponseEntity.ok(produtos);
     }
 
+    @GetMapping("/categoria/{categoria}")
+    public ResponseEntity<Page<Produto>> buscarPorCategoria(
+            @PathVariable String categoria,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Produto> produtos = service.buscarPorCategoriaPaginado(categoria, page, size);
+        return ResponseEntity.ok(produtos);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
@@ -58,9 +66,4 @@ public class ProdutoController {
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }
-
-
-
-
-
 }

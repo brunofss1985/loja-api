@@ -4,6 +4,9 @@ import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,17 +20,19 @@ public class ProdutoService {
     @Autowired
     private ProdutoRepository repository;
 
-    public List<Produto> listarTodos() {
-        return repository.findAll();
+    public Page<Produto> listarTodosPaginado(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findAll(pageable);
+    }
+
+    public Page<Produto> buscarPorCategoriaPaginado(String categoria, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findByCategoriaIgnoreCase(categoria, pageable);
     }
 
     public Produto buscarPorId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-    }
-
-    public List<Produto> buscarPorCategoria(String categoria) {
-        return repository.findByCategoriaIgnoreCase(categoria);
     }
 
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
