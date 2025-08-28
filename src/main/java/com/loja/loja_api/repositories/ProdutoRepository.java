@@ -1,6 +1,9 @@
+// src/main/java/com/loja/loja_api/repositories/ProdutoRepository.java
+
 package com.loja.loja_api.repositories;
 
 import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.dto.CountedItemDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,17 +18,23 @@ import java.util.List;
 @Transactional(readOnly = true)
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
-    // Herda findAll(Pageable), mas deixo explícito se preferir
     Page<Produto> findAll(Pageable pageable);
 
-    // Marcas e Categorias distintas (somente ativos)
-    @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true ORDER BY p.marca")
-    List<String> findDistinctMarcas();
+    // Queries para listar categorias/marcas com a contagem de produtos
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.marca ORDER BY p.marca")
+    List<CountedItemDto> findDistinctMarcasWithCount();
 
-    @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.ativo = true ORDER BY p.categoria")
-    List<String> findDistinctCategorias();
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.categoria, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.categoria ORDER BY p.categoria")
+    List<CountedItemDto> findDistinctCategoriasWithCount();
 
-    // ⚠️ Antiga (com listas nulas) -> não será usada mais, mas deixo aqui por compatibilidade
+    // Queries que contam o total de categorias/marcas
+    @Query("SELECT COUNT(DISTINCT p.marca) FROM Produto p WHERE p.ativo = true")
+    Long countDistinctMarcas();
+
+    @Query("SELECT COUNT(DISTINCT p.categoria) FROM Produto p WHERE p.ativo = true")
+    Long countDistinctCategorias();
+
+    // Consultas de filtro principal
     @Query("SELECT p FROM Produto p WHERE " +
             "(:categorias IS NULL OR p.categoria IN :categorias) AND " +
             "(:marcas IS NULL OR p.marca IN :marcas) AND " +
@@ -35,8 +44,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                 @Param("minPreco") Double minPreco,
                                 @Param("maxPreco") Double maxPreco,
                                 Pageable pageable);
-
-    // ✅ Consultas robustas (evitam passar lista nula para IN)
 
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (p.preco BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco,
@@ -62,13 +69,12 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                     @Param("maxPreco") Double maxPreco,
                                                     Pageable pageable);
 
-    // Marcas por categorias
-    @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true AND p.categoria IN :categorias ORDER BY p.marca")
-    List<String> findDistinctMarcasByCategorias(@Param("categorias") List<String> categorias);
+    // Queries para buscar categorias/marcas com contagem com base em filtros cruzados
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true AND p.categoria IN :categorias GROUP BY p.marca ORDER BY p.marca")
+    List<CountedItemDto> findDistinctMarcasByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
-    // Categorias por marcas
-    @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas ORDER BY p.categoria")
-    List<String> findDistinctCategoriasByMarcas(@Param("marcas") List<String> marcas);
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.categoria, COUNT(p)) FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas GROUP BY p.categoria ORDER BY p.categoria")
+    List<CountedItemDto> findDistinctCategoriasByMarcasWithCount(@Param("marcas") List<String> marcas);
 
     // Métodos auxiliares originais
     @Query("SELECT p FROM Produto p WHERE p.ativo = true")

@@ -1,8 +1,11 @@
+// src/main/java/com/loja/loja_api/controllers/ProdutoController.java
+
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.service.ProdutoService;
+import com.loja.loja_api.dto.CountedItemDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +31,6 @@ public class ProdutoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        // Normaliza para aceitar tanto "a,b" quanto múltiplos parâmetros
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
 
@@ -44,32 +46,42 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos);
     }
 
+    // Endpoints para listar marcas/categorias com contagem de produtos
     @GetMapping("/marcas")
-    public ResponseEntity<List<String>> listarMarcas() {
+    public ResponseEntity<List<CountedItemDto>> listarMarcas() {
         return ResponseEntity.ok(service.listarMarcas());
     }
 
     @GetMapping("/categorias")
-    public ResponseEntity<List<String>> listarCategorias() {
+    public ResponseEntity<List<CountedItemDto>> listarCategorias() {
         return ResponseEntity.ok(service.listarCategorias());
     }
 
-    // ✨ Lista marcas com base nas categorias selecionadas (aceita vírgula e/ou múltiplos params)
     @GetMapping("/marcas-por-categoria")
-    public ResponseEntity<List<String>> listarMarcasPorCategorias(
+    public ResponseEntity<List<CountedItemDto>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         return ResponseEntity.ok(service.listarMarcasPorCategorias(categoriasNorm));
     }
 
-    // ✨ Lista categorias com base nas marcas selecionadas (aceita vírgula e/ou múltiplos params)
     @GetMapping("/categorias-por-marca")
-    public ResponseEntity<List<String>> listarCategoriasPorMarcas(
+    public ResponseEntity<List<CountedItemDto>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
         return ResponseEntity.ok(service.listarCategoriasPorMarcas(marcasNorm));
+    }
+
+    // Novos endpoints para a contagem total
+    @GetMapping("/marcas/count")
+    public ResponseEntity<Long> contarMarcas() {
+        return ResponseEntity.ok(service.contarMarcas());
+    }
+
+    @GetMapping("/categorias/count")
+    public ResponseEntity<Long> contarCategorias() {
+        return ResponseEntity.ok(service.contarCategorias());
     }
 
     @GetMapping("/{id}")
@@ -77,7 +89,6 @@ public class ProdutoController {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    // Mantém o contrato MULTIPART já usado no frontend
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> criar(
             @RequestPart("produto") ProdutoDTO dto,
@@ -103,7 +114,6 @@ public class ProdutoController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---------- Helpers ----------
     private List<String> normalizeCommaAndRepeatParams(List<String> raw) {
         if (raw == null || raw.isEmpty()) return null;
         List<String> out = new ArrayList<>();

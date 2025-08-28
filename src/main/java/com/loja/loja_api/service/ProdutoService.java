@@ -1,8 +1,11 @@
+// src/main/java/com/loja/loja_api/service/ProdutoService.java
+
 package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
+import com.loja.loja_api.dto.CountedItemDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,39 +49,48 @@ public class ProdutoService {
         } else if (temMarcas) {
             return repository.findByMarcasAndPrice(marcasFiltro, minPreco, maxPreco, pageable);
         } else {
-            // Sem filtros de categoria/marca: ainda respeita a faixa de preço
             return repository.findByPriceRange(minPreco, maxPreco, pageable);
         }
     }
 
+    // Métodos para obter a lista de items com contagem
     @Transactional(readOnly = true)
-    public List<String> listarMarcas() {
-        return repository.findDistinctMarcas();
+    public List<CountedItemDto> listarMarcas() {
+        return repository.findDistinctMarcasWithCount();
     }
 
     @Transactional(readOnly = true)
-    public List<String> listarCategorias() {
-        return repository.findDistinctCategorias();
+    public List<CountedItemDto> listarCategorias() {
+        return repository.findDistinctCategoriasWithCount();
     }
 
-    // ✨ NOVO: Busca marcas com base em categorias selecionadas
     @Transactional(readOnly = true)
-    public List<String> listarMarcasPorCategorias(List<String> categorias) {
+    public List<CountedItemDto> listarMarcasPorCategorias(List<String> categorias) {
         List<String> norm = normalizeList(categorias);
         if (norm == null || norm.isEmpty()) {
             return listarMarcas();
         }
-        return repository.findDistinctMarcasByCategorias(norm);
+        return repository.findDistinctMarcasByCategoriasWithCount(norm);
     }
 
-    // ✨ NOVO: Busca categorias com base em marcas selecionadas
     @Transactional(readOnly = true)
-    public List<String> listarCategoriasPorMarcas(List<String> marcas) {
+    public List<CountedItemDto> listarCategoriasPorMarcas(List<String> marcas) {
         List<String> norm = normalizeList(marcas);
         if (norm == null || norm.isEmpty()) {
             return listarCategorias();
         }
-        return repository.findDistinctCategoriasByMarcas(norm);
+        return repository.findDistinctCategoriasByMarcasWithCount(norm);
+    }
+
+    // Novos métodos para obter a contagem total
+    @Transactional(readOnly = true)
+    public Long contarMarcas() {
+        return repository.countDistinctMarcas();
+    }
+
+    @Transactional(readOnly = true)
+    public Long contarCategorias() {
+        return repository.countDistinctCategorias();
     }
 
     @Transactional(readOnly = true)
