@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,25 +32,47 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Produto> buscarProdutosComFiltros(String categoria, List<String> marcas, Double minPreco, Double maxPreco, int page, int size) {
+    public Page<Produto> buscarProdutosComFiltros(List<String> categorias, List<String> marcas, Double minPreco, Double maxPreco, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        // Se a categoria for "todos" ou "creatina", "whey", etc., tratamos como null para a busca geral
-        String categoriaFiltro = ("todos".equalsIgnoreCase(categoria) || categoria == null) ? null : categoria;
+        List<String> categoriasFiltro = (categorias == null || categorias.isEmpty()) ? null : categorias;
+        List<String> marcasFiltro = (marcas == null || marcas.isEmpty()) ? null : marcas;
 
-        // ✨ LÓGICA CORRIGIDA: Usa o método de repositório apropriado com base na lista de marcas
-        if (marcas == null || marcas.isEmpty()) {
-            // Se a lista de marcas estiver vazia, chama a consulta que não filtra por marca
-            return repository.findByFiltersWithoutMarcas(categoriaFiltro, minPreco, maxPreco, pageable);
+        boolean noCategoryOrBrandFilter = (categoriasFiltro == null) && (marcasFiltro == null);
+
+        if (noCategoryOrBrandFilter) {
+            return repository.findAll(pageable);
         } else {
-            // Se a lista de marcas não estiver vazia, chama a consulta que filtra por marca
-            return repository.findByFilters(categoriaFiltro, marcas, minPreco, maxPreco, pageable);
+            return repository.findByFilters(categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
         }
     }
 
     @Transactional(readOnly = true)
     public List<String> listarMarcas() {
         return repository.findDistinctMarcas();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> listarCategorias() {
+        return repository.findDistinctCategorias();
+    }
+
+    // ✨ NOVO: Busca marcas com base em categorias selecionadas
+    @Transactional(readOnly = true)
+    public List<String> listarMarcasPorCategorias(List<String> categorias) {
+        if (categorias == null || categorias.isEmpty()) {
+            return listarMarcas();
+        }
+        return repository.findDistinctMarcasByCategorias(categorias);
+    }
+
+    // ✨ NOVO: Busca categorias com base em marcas selecionadas
+    @Transactional(readOnly = true)
+    public List<String> listarCategoriasPorMarcas(List<String> marcas) {
+        if (marcas == null || marcas.isEmpty()) {
+            return listarCategorias();
+        }
+        return repository.findDistinctCategoriasByMarcas(marcas);
     }
 
     @Transactional(readOnly = true)

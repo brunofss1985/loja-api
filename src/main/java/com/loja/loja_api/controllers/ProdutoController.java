@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -21,20 +22,40 @@ public class ProdutoController {
 
     @GetMapping
     public ResponseEntity<Page<Produto>> listarComFiltros(
-            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) List<String> categorias,
             @RequestParam(required = false) List<String> marcas,
             @RequestParam(defaultValue = "0.0") double minPreco,
             @RequestParam(defaultValue = "999999.99") double maxPreco,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Pageable pageable) { // Certifique-se de que Pageable está sendo injetado
 
-        Page<Produto> produtos = service.buscarProdutosComFiltros(categoria, marcas, minPreco, maxPreco, page, size);
+        Page<Produto> produtos = service.buscarProdutosComFiltros(categorias, marcas, minPreco, maxPreco, page, size);
         return ResponseEntity.ok(produtos);
     }
 
     @GetMapping("/marcas")
     public ResponseEntity<List<String>> listarMarcas() {
         return ResponseEntity.ok(service.listarMarcas());
+    }
+
+    @GetMapping("/categorias")
+    public ResponseEntity<List<String>> listarCategorias() {
+        return ResponseEntity.ok(service.listarCategorias());
+    }
+
+    // ✨ NOVO: Endpoint para listar marcas por categorias selecionadas
+    @GetMapping("/marcas-por-categoria")
+    public ResponseEntity<List<String>> listarMarcasPorCategorias(
+            @RequestParam(required = false) List<String> categorias) {
+        return ResponseEntity.ok(service.listarMarcasPorCategorias(categorias));
+    }
+
+    // ✨ NOVO: Endpoint para listar categorias por marcas selecionadas
+    @GetMapping("/categorias-por-marca")
+    public ResponseEntity<List<String>> listarCategoriasPorMarcas(
+            @RequestParam(required = false) List<String> marcas) {
+        return ResponseEntity.ok(service.listarCategoriasPorMarcas(marcas));
     }
 
     @GetMapping("/{id}")

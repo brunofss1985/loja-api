@@ -6,43 +6,46 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Repository
 @Transactional(readOnly = true)
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     // --- Métodos com paginação (para o frontend) ---
     Page<Produto> findAll(Pageable pageable);
 
-    // Método para filtrar por categoria, marca e preço
+    // ✨ ATUALIZADO: Método para encontrar marcas ativas
+    @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true ORDER BY p.marca")
+    List<String> findDistinctMarcas();
+
+    // ✨ ATUALIZADO: Método para encontrar categorias ativas
+    @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.ativo = true ORDER BY p.categoria")
+    List<String> findDistinctCategorias();
+
+    // ✨ ATUALIZADO: Método para filtrar por categorias, marcas e preço
     @Query("SELECT p FROM Produto p WHERE " +
-            "(:categoria IS NULL OR p.categoria = :categoria) AND " +
-            "(p.marca IN :marcas) AND " +
+            "(:categorias IS NULL OR p.categoria IN :categorias) AND " +
+            "(:marcas IS NULL OR p.marca IN :marcas) AND " +
             "(p.preco BETWEEN :minPreco AND :maxPreco) AND p.ativo = true")
-    Page<Produto> findByFilters(@Param("categoria") String categoria,
+    Page<Produto> findByFilters(@Param("categorias") List<String> categorias,
                                 @Param("marcas") List<String> marcas,
                                 @Param("minPreco") Double minPreco,
                                 @Param("maxPreco") Double maxPreco,
                                 Pageable pageable);
 
-    // Método para quando a lista de marcas está vazia
-    @Query("SELECT p FROM Produto p WHERE " +
-            "(:categoria IS NULL OR p.categoria = :categoria) AND " +
-            "(p.preco BETWEEN :minPreco AND :maxPreco) AND p.ativo = true")
-    Page<Produto> findByFiltersWithoutMarcas(@Param("categoria") String categoria,
-                                             @Param("minPreco") Double minPreco,
-                                             @Param("maxPreco") Double maxPreco,
-                                             Pageable pageable);
+    // ✨ NOVO: Busca marcas com base nas categorias selecionadas
+    @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true AND p.categoria IN :categorias ORDER BY p.marca")
+    List<String> findDistinctMarcasByCategorias(@Param("categorias") List<String> categorias);
 
-    // Método para encontrar marcas ativas
-    @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true ORDER BY p.marca")
-    List<String> findDistinctMarcas();
+    // ✨ NOVO: Busca categorias com base nas marcas selecionadas
+    @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas ORDER BY p.categoria")
+    List<String> findDistinctCategoriasByMarcas(@Param("marcas") List<String> marcas);
 
-
-    // ✨ MÉTODOS RESTAURADOS PARA OUTROS COMPONENTES/SERVIÇOS
-
+    // Métodos restaurados
     @Query("SELECT p FROM Produto p WHERE p.ativo = true")
     List<Produto> findByAtivoTrue();
 
