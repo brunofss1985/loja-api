@@ -15,18 +15,17 @@ import java.util.List;
 @Transactional(readOnly = true)
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
-    // --- Métodos com paginação (para o frontend) ---
+    // Herda findAll(Pageable), mas deixo explícito se preferir
     Page<Produto> findAll(Pageable pageable);
 
-    // ✨ ATUALIZADO: Método para encontrar marcas ativas
+    // Marcas e Categorias distintas (somente ativos)
     @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true ORDER BY p.marca")
     List<String> findDistinctMarcas();
 
-    // ✨ ATUALIZADO: Método para encontrar categorias ativas
     @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.ativo = true ORDER BY p.categoria")
     List<String> findDistinctCategorias();
 
-    // ✨ ATUALIZADO: Método para filtrar por categorias, marcas e preço
+    // ⚠️ Antiga (com listas nulas) -> não será usada mais, mas deixo aqui por compatibilidade
     @Query("SELECT p FROM Produto p WHERE " +
             "(:categorias IS NULL OR p.categoria IN :categorias) AND " +
             "(:marcas IS NULL OR p.marca IN :marcas) AND " +
@@ -37,15 +36,41 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                 @Param("maxPreco") Double maxPreco,
                                 Pageable pageable);
 
-    // ✨ NOVO: Busca marcas com base nas categorias selecionadas
+    // ✅ Consultas robustas (evitam passar lista nula para IN)
+
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco,
+                                   @Param("maxPreco") Double maxPreco,
+                                   Pageable pageable);
+
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.categoria IN :categorias AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias,
+                                           @Param("minPreco") Double minPreco,
+                                           @Param("maxPreco") Double maxPreco,
+                                           Pageable pageable);
+
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas,
+                                       @Param("minPreco") Double minPreco,
+                                       @Param("maxPreco") Double maxPreco,
+                                       Pageable pageable);
+
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.categoria IN :categorias AND p.marca IN :marcas AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias,
+                                                    @Param("marcas") List<String> marcas,
+                                                    @Param("minPreco") Double minPreco,
+                                                    @Param("maxPreco") Double maxPreco,
+                                                    Pageable pageable);
+
+    // Marcas por categorias
     @Query("SELECT DISTINCT p.marca FROM Produto p WHERE p.ativo = true AND p.categoria IN :categorias ORDER BY p.marca")
     List<String> findDistinctMarcasByCategorias(@Param("categorias") List<String> categorias);
 
-    // ✨ NOVO: Busca categorias com base nas marcas selecionadas
+    // Categorias por marcas
     @Query("SELECT DISTINCT p.categoria FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas ORDER BY p.categoria")
     List<String> findDistinctCategoriasByMarcas(@Param("marcas") List<String> marcas);
 
-    // Métodos restaurados
+    // Métodos auxiliares originais
     @Query("SELECT p FROM Produto p WHERE p.ativo = true")
     List<Produto> findByAtivoTrue();
 

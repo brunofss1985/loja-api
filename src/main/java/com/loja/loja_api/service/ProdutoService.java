@@ -10,14 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
-import java.util.Optional;
 
 @Service
 public class ProdutoService {
@@ -32,18 +28,26 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Produto> buscarProdutosComFiltros(List<String> categorias, List<String> marcas, Double minPreco, Double maxPreco, int page, int size) {
+    public Page<Produto> buscarProdutosComFiltros(List<String> categorias, List<String> marcas,
+                                                  Double minPreco, Double maxPreco,
+                                                  int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        List<String> categoriasFiltro = (categorias == null || categorias.isEmpty()) ? null : categorias;
-        List<String> marcasFiltro = (marcas == null || marcas.isEmpty()) ? null : marcas;
+        List<String> categoriasFiltro = normalizeList(categorias);
+        List<String> marcasFiltro = normalizeList(marcas);
 
-        boolean noCategoryOrBrandFilter = (categoriasFiltro == null) && (marcasFiltro == null);
+        boolean temCategorias = categoriasFiltro != null && !categoriasFiltro.isEmpty();
+        boolean temMarcas = marcasFiltro != null && !marcasFiltro.isEmpty();
 
-        if (noCategoryOrBrandFilter) {
-            return repository.findAll(pageable);
+        if (temCategorias && temMarcas) {
+            return repository.findByCategoriasAndMarcasAndPrice(categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
+        } else if (temCategorias) {
+            return repository.findByCategoriasAndPrice(categoriasFiltro, minPreco, maxPreco, pageable);
+        } else if (temMarcas) {
+            return repository.findByMarcasAndPrice(marcasFiltro, minPreco, maxPreco, pageable);
         } else {
-            return repository.findByFilters(categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
+            // Sem filtros de categoria/marca: ainda respeita a faixa de preço
+            return repository.findByPriceRange(minPreco, maxPreco, pageable);
         }
     }
 
@@ -60,19 +64,21 @@ public class ProdutoService {
     // ✨ NOVO: Busca marcas com base em categorias selecionadas
     @Transactional(readOnly = true)
     public List<String> listarMarcasPorCategorias(List<String> categorias) {
-        if (categorias == null || categorias.isEmpty()) {
+        List<String> norm = normalizeList(categorias);
+        if (norm == null || norm.isEmpty()) {
             return listarMarcas();
         }
-        return repository.findDistinctMarcasByCategorias(categorias);
+        return repository.findDistinctMarcasByCategorias(norm);
     }
 
     // ✨ NOVO: Busca categorias com base em marcas selecionadas
     @Transactional(readOnly = true)
     public List<String> listarCategoriasPorMarcas(List<String> marcas) {
-        if (marcas == null || marcas.isEmpty()) {
+        List<String> norm = normalizeList(marcas);
+        if (norm == null || norm.isEmpty()) {
             return listarCategorias();
         }
-        return repository.findDistinctCategoriasByMarcas(marcas);
+        return repository.findDistinctCategoriasByMarcas(norm);
     }
 
     @Transactional(readOnly = true)
@@ -231,5 +237,18 @@ public class ProdutoService {
                 .galeria(galeria)
                 .galeriaMimeTypes(galeriaMimes)
                 .build();
+    }
+
+    private List<String> normalizeList(List<String> raw) {
+        if (raw == null || raw.isEmpty()) return null;
+        List<String> out = new ArrayList<>();
+        for (String s : raw) {
+            if (s == null) continue;
+            for (String p : s.split(",")) {
+                String t = p.trim();
+                if (!t.isEmpty()) out.add(t);
+            }
+        }
+        return out.isEmpty() ? null : out;
     }
 }
