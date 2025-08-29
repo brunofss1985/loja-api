@@ -22,7 +22,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasWithCount();
 
-    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true GROUP BY c ORDER BY c")
+    // 🌟 CORREÇÃO FINAL: Ordenando pela contagem (mais robusto)
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasWithCount();
 
     // Queries que contam o total de categorias/marcas
@@ -33,7 +34,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     Long countDistinctCategorias();
 
     // Consultas de filtro principal
-    // ✨ Lógica atualizada para usar CASE
+    // Lógica atualizada para usar CASE
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE " +
             "(:categorias IS NULL OR c IN :categorias) AND " +
             "(:marcas IS NULL OR p.marca IN :marcas) AND " +
@@ -44,21 +45,21 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                 @Param("maxPreco") Double maxPreco,
                                 Pageable pageable);
 
-    // ✨ Lógica atualizada para usar CASE
+    // Lógica atualizada para usar CASE
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco,
                                    @Param("maxPreco") Double maxPreco,
                                    Pageable pageable);
 
     // Novo: Filtra por categorias usando MEMBER OF
-    // ✨ Lógica atualizada para usar CASE
+    // Lógica atualizada para usar CASE
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias,
                                            @Param("minPreco") Double minPreco,
                                            @Param("maxPreco") Double maxPreco,
                                            Pageable pageable);
 
-    // ✨ Lógica atualizada para usar CASE
+    // Lógica atualizada para usar CASE
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas,
                                        @Param("minPreco") Double minPreco,
@@ -66,7 +67,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                        Pageable pageable);
 
     // Novo: Filtra por categorias e marcas usando MEMBER OF
-    // ✨ Lógica atualizada para usar CASE
+    // Lógica atualizada para usar CASE
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias,
                                                     @Param("marcas") List<String> marcas,
@@ -78,7 +79,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
-    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND p.marca IN :marcas GROUP BY c ORDER BY c")
+    // 🌟 CORREÇÃO FINAL: Ordenando pela contagem (mais robusto)
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND p.marca IN :marcas GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasByMarcasWithCount(@Param("marcas") List<String> marcas);
 
     // Métodos auxiliares originais
