@@ -21,7 +21,7 @@ public class ProdutoDTO {
     private String slug;
     private String descricao;
     private String descricaoCurta;
-    private String categoria;
+    private List<String> categorias; // Alterado para List<String>
     private String sabor;
     private String tamanhoPorcao;
     private String fornecedor;

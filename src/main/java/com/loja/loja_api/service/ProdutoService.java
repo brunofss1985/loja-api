@@ -1,5 +1,3 @@
-// src/main/java/com/loja/loja_api/service/ProdutoService.java
-
 package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.ProdutoDTO;
@@ -115,7 +113,7 @@ public class ProdutoService {
             existente.setSlug(dto.getSlug());
             existente.setDescricao(dto.getDescricao());
             existente.setDescricaoCurta(dto.getDescricaoCurta());
-            existente.setCategoria(dto.getCategoria());
+            existente.setCategorias(dto.getCategorias()); // Alterado para setCategorias
             existente.setPeso(dto.getPeso());
             existente.setSabor(dto.getSabor());
             existente.setTamanhoPorcao(dto.getTamanhoPorcao());
@@ -212,7 +210,7 @@ public class ProdutoService {
                 .slug(dto.getSlug())
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())
-                .categoria(dto.getCategoria())
+                .categorias(dto.getCategorias()) // Alterado para setCategorias
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())

@@ -33,7 +33,11 @@ public class Produto {
     @Column(length = 500)
     private String descricaoCurta;
 
-    private String categoria;
+    @ElementCollection
+    @CollectionTable(name = "produto_categorias", joinColumns = @JoinColumn(name = "produto_id"))
+    @Column(name = "categoria")
+    private List<String> categorias; // Alterado para List<String>
+
     private String sabor;
     private String tamanhoPorcao;
     private String statusAprovacao;

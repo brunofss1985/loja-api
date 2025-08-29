@@ -1,5 +1,3 @@
-// src/main/java/com/loja/loja_api/controllers/ProdutoController.java
-
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.ProdutoDTO;
