@@ -26,6 +26,7 @@ public class ProdutoDTO {
     private String tamanhoPorcao;
     private String fornecedor;
     private String statusAprovacao;
+    private String disponibilidade; // <<< Novo campo adicionado
 
     // Valores
     private Double peso;

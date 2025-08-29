@@ -42,11 +42,12 @@ public class Produto {
     private String tamanhoPorcao;
     private String statusAprovacao;
     private String fornecedor;
+    private String disponibilidade; // <<< Novo campo adicionado
 
     private Double peso;
     private Double preco;
     private Double precoDesconto;
-    private String porcentagemDesconto; // ✨ Novo campo na entidade
+    private String porcentagemDesconto;
     private Double custo;
     private Double lucroEstimado;
     private Boolean ativo;

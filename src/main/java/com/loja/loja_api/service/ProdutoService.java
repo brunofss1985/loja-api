@@ -51,7 +51,6 @@ public class ProdutoService {
         }
     }
 
-    // Métodos para obter a lista de items com contagem
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarMarcas() {
         return repository.findDistinctMarcasWithCount();
@@ -80,7 +79,6 @@ public class ProdutoService {
         return repository.findDistinctCategoriasByMarcasWithCount(norm);
     }
 
-    // Novos métodos para obter a contagem total
     @Transactional(readOnly = true)
     public Long contarMarcas() {
         return repository.countDistinctMarcas();
@@ -119,12 +117,13 @@ public class ProdutoService {
             existente.setTamanhoPorcao(dto.getTamanhoPorcao());
             existente.setPreco(dto.getPreco());
             existente.setPrecoDesconto(dto.getPrecoDesconto());
-            existente.setPorcentagemDesconto(dto.getPorcentagemDesconto()); // ✨ Adicionado
+            existente.setPorcentagemDesconto(dto.getPorcentagemDesconto());
             existente.setCusto(dto.getCusto());
             existente.setFornecedor(dto.getFornecedor());
             existente.setLucroEstimado(dto.getLucroEstimado());
             existente.setStatusAprovacao(dto.getStatusAprovacao());
             existente.setAtivo(dto.getAtivo());
+            existente.setDisponibilidade(dto.getDisponibilidade()); // <<< Novo campo adicionado
             existente.setEstoque(dto.getEstoque());
             existente.setEstoqueMinimo(dto.getEstoqueMinimo());
             existente.setEstoqueMaximo(dto.getEstoqueMaximo());
@@ -217,12 +216,13 @@ public class ProdutoService {
                 .tamanhoPorcao(dto.getTamanhoPorcao())
                 .preco(dto.getPreco())
                 .precoDesconto(dto.getPrecoDesconto())
-                .porcentagemDesconto(dto.getPorcentagemDesconto()) // ✨ Adicionado
+                .porcentagemDesconto(dto.getPorcentagemDesconto())
                 .custo(dto.getCusto())
                 .fornecedor(dto.getFornecedor())
                 .lucroEstimado(dto.getLucroEstimado())
                 .statusAprovacao(dto.getStatusAprovacao())
                 .ativo(dto.getAtivo())
+                .disponibilidade(dto.getDisponibilidade()) // <<< Novo campo adicionado
                 .estoque(dto.getEstoque())
                 .estoqueMinimo(dto.getEstoqueMinimo())
                 .estoqueMaximo(dto.getEstoqueMaximo())
