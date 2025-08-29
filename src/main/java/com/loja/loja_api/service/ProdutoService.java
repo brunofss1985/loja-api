@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,8 +32,18 @@ public class ProdutoService {
     @Transactional(readOnly = true)
     public Page<Produto> buscarProdutosComFiltros(List<String> categorias, List<String> marcas,
                                                   Double minPreco, Double maxPreco,
-                                                  int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+                                                  int page, int size,
+                                                  String sort) {
+
+        Pageable pageable;
+        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
+            String[] sortParams = sort.split(",");
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sortedBy = Sort.by(direction, sortParams[0]);
+            pageable = PageRequest.of(page, size, sortedBy);
+        } else {
+            pageable = PageRequest.of(page, size);
+        }
 
         List<String> categoriasFiltro = normalizeList(categorias);
         List<String> marcasFiltro = normalizeList(marcas);
@@ -123,7 +134,7 @@ public class ProdutoService {
             existente.setLucroEstimado(dto.getLucroEstimado());
             existente.setStatusAprovacao(dto.getStatusAprovacao());
             existente.setAtivo(dto.getAtivo());
-            existente.setDisponibilidade(dto.getDisponibilidade()); // <<< Novo campo adicionado
+            existente.setDisponibilidade(dto.getDisponibilidade());
             existente.setEstoque(dto.getEstoque());
             existente.setEstoqueMinimo(dto.getEstoqueMinimo());
             existente.setEstoqueMaximo(dto.getEstoqueMaximo());
@@ -222,7 +233,7 @@ public class ProdutoService {
                 .lucroEstimado(dto.getLucroEstimado())
                 .statusAprovacao(dto.getStatusAprovacao())
                 .ativo(dto.getAtivo())
-                .disponibilidade(dto.getDisponibilidade()) // <<< Novo campo adicionado
+                .disponibilidade(dto.getDisponibilidade())
                 .estoque(dto.getEstoque())
                 .estoqueMinimo(dto.getEstoqueMinimo())
                 .estoqueMaximo(dto.getEstoqueMaximo())

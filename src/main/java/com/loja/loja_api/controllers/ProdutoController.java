@@ -27,7 +27,8 @@ public class ProdutoController {
             @RequestParam(defaultValue = "0.0") double minPreco,
             @RequestParam(defaultValue = "999999.99") double maxPreco,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sort
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
@@ -38,7 +39,8 @@ public class ProdutoController {
                 minPreco,
                 maxPreco,
                 page,
-                size
+                size,
+                sort
         );
 
         return ResponseEntity.ok(produtos);
