@@ -19,11 +19,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     Page<Produto> findAll(Pageable pageable);
 
     // Queries para listar categorias/marcas com a contagem de produtos
-    // Utiliza 'p.marca' pois 'marca' continua sendo uma string
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasWithCount();
 
-    // Novo: Conta categorias de cada produto usando MEMBER OF para agrupar
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true GROUP BY c ORDER BY c")
     List<CountedItemDto> findDistinctCategoriasWithCount();
 
@@ -31,42 +29,45 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT COUNT(DISTINCT p.marca) FROM Produto p WHERE p.ativo = true")
     Long countDistinctMarcas();
 
-    // Novo: Conta categorias distintas
     @Query("SELECT COUNT(DISTINCT c) FROM Produto p JOIN p.categorias c WHERE p.ativo = true")
     Long countDistinctCategorias();
 
     // Consultas de filtro principal
-    // Novo: Usa MEMBER OF para verificar se alguma categoria da lista está na coleção do produto
+    // ✨ Lógica atualizada para usar CASE
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE " +
             "(:categorias IS NULL OR c IN :categorias) AND " +
             "(:marcas IS NULL OR p.marca IN :marcas) AND " +
-            "(p.preco BETWEEN :minPreco AND :maxPreco) AND p.ativo = true")
+            "(CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco) AND p.ativo = true")
     Page<Produto> findByFilters(@Param("categorias") List<String> categorias,
                                 @Param("marcas") List<String> marcas,
                                 @Param("minPreco") Double minPreco,
                                 @Param("maxPreco") Double maxPreco,
                                 Pageable pageable);
 
-    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    // ✨ Lógica atualizada para usar CASE
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco,
                                    @Param("maxPreco") Double maxPreco,
                                    Pageable pageable);
 
     // Novo: Filtra por categorias usando MEMBER OF
-    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    // ✨ Lógica atualizada para usar CASE
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias,
                                            @Param("minPreco") Double minPreco,
                                            @Param("maxPreco") Double maxPreco,
                                            Pageable pageable);
 
-    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    // ✨ Lógica atualizada para usar CASE
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas,
                                        @Param("minPreco") Double minPreco,
                                        @Param("maxPreco") Double maxPreco,
                                        Pageable pageable);
 
     // Novo: Filtra por categorias e marcas usando MEMBER OF
-    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND (p.preco BETWEEN :minPreco AND :maxPreco)")
+    // ✨ Lógica atualizada para usar CASE
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias,
                                                     @Param("marcas") List<String> marcas,
                                                     @Param("minPreco") Double minPreco,
