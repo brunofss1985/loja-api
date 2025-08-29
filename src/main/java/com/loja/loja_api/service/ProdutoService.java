@@ -113,12 +113,13 @@ public class ProdutoService {
             existente.setSlug(dto.getSlug());
             existente.setDescricao(dto.getDescricao());
             existente.setDescricaoCurta(dto.getDescricaoCurta());
-            existente.setCategorias(dto.getCategorias()); // Alterado para setCategorias
+            existente.setCategorias(dto.getCategorias());
             existente.setPeso(dto.getPeso());
             existente.setSabor(dto.getSabor());
             existente.setTamanhoPorcao(dto.getTamanhoPorcao());
             existente.setPreco(dto.getPreco());
             existente.setPrecoDesconto(dto.getPrecoDesconto());
+            existente.setPorcentagemDesconto(dto.getPorcentagemDesconto()); // ✨ Adicionado
             existente.setCusto(dto.getCusto());
             existente.setFornecedor(dto.getFornecedor());
             existente.setLucroEstimado(dto.getLucroEstimado());
@@ -210,12 +211,13 @@ public class ProdutoService {
                 .slug(dto.getSlug())
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())
-                .categorias(dto.getCategorias()) // Alterado para setCategorias
+                .categorias(dto.getCategorias())
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())
                 .preco(dto.getPreco())
                 .precoDesconto(dto.getPrecoDesconto())
+                .porcentagemDesconto(dto.getPorcentagemDesconto()) // ✨ Adicionado
                 .custo(dto.getCusto())
                 .fornecedor(dto.getFornecedor())
                 .lucroEstimado(dto.getLucroEstimado())

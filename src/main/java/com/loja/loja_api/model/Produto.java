@@ -36,7 +36,7 @@ public class Produto {
     @ElementCollection
     @CollectionTable(name = "produto_categorias", joinColumns = @JoinColumn(name = "produto_id"))
     @Column(name = "categoria")
-    private List<String> categorias; // Alterado para List<String>
+    private List<String> categorias;
 
     private String sabor;
     private String tamanhoPorcao;
@@ -46,6 +46,7 @@ public class Produto {
     private Double peso;
     private Double preco;
     private Double precoDesconto;
+    private String porcentagemDesconto; // ✨ Novo campo na entidade
     private Double custo;
     private Double lucroEstimado;
     private Boolean ativo;
