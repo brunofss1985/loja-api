@@ -41,16 +41,13 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         String token = recoverToken(request);
 
-        // Verifica se há um token, se não houver, a requisição continua sem autenticação
         if (token != null) {
             try {
-                // 🔐 Valida JWT
                 String email = tokenService.validateToken(token);
                 if (email == null) {
                     throw new RuntimeException("Token JWT inválido ou expirado.");
                 }
 
-                // 🔍 Valida sessão no banco
                 Optional<Session> sessionOpt = sessionRepository.findByJwtTokenAndActiveTrue(token);
                 if (sessionOpt.isEmpty()) {
                     throw new RuntimeException("Sessão não encontrada ou inativa.");
@@ -63,11 +60,9 @@ public class SecurityFilter extends OncePerRequestFilter {
                     throw new RuntimeException("Sessão expirada por inatividade.");
                 }
 
-                // ✅ Atualiza atividade
                 session.setLastActivity(LocalDateTime.now());
                 sessionRepository.save(session);
 
-                // 👤 Autentica usuário
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
 
@@ -78,15 +73,11 @@ public class SecurityFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
-                // Se houver qualquer falha na validação do token, o SecurityContextHolder
-                // será limpo para garantir que a requisição não seja autenticada erroneamente.
                 SecurityContextHolder.clearContext();
                 System.err.println("Falha na autenticação do token: " + e.getMessage());
             }
         }
 
-        // A requisição continua para o próximo filtro, que será o Spring Security
-        // para checar as regras de autorização definidas no SecurityConfig
         filterChain.doFilter(request, response);
     }
 

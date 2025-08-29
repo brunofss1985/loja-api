@@ -33,16 +33,16 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Permite acesso à rota de "Todos os Produtos"
+                        // Permite acesso a rotas públicas
                         .requestMatchers("/api/produtos").permitAll()
-                        // Permite acesso a rotas com categorias (ex: /api/produtos/creatina)
                         .requestMatchers("/api/produtos/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/checkout", "/checkout/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/chatbot/**").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
-
+                        // 🆕 A rota de alteração de senha deve estar autenticada
+                        .requestMatchers("/api/user/change-password").authenticated()
                         // Rotas que exigem autenticação
                         .anyRequest().authenticated()
                 )

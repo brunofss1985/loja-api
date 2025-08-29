@@ -1,6 +1,8 @@
 package com.loja.loja_api.controllers;
 
+import com.loja.loja_api.dto.PasswordChangeDto;
 import com.loja.loja_api.model.User;
+import com.loja.loja_api.model.ChangePasswordResult;
 import com.loja.loja_api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,17 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody PasswordChangeDto passwordChangeDto) {
+        var result = userService.changePassword(
+                passwordChangeDto.getCurrentPassword(),
+                passwordChangeDto.getNewPassword()
+        );
+        return result.isSuccess()
+                ? ResponseEntity.ok().build()
+                : ResponseEntity.badRequest().body(result.getMessage());
+    }
+
     @GetMapping("/email/{email}")
     public ResponseEntity<User> getByEmail(@PathVariable String email) {
         return userService.getByEmail(email)
@@ -61,6 +74,9 @@ public class UserController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
+        // 🔐 Ignora o userType enviado na requisição de atualização
+        updatedUser.setUserType(null);
+        updatedUser.setPassword(null);
         return userService.updateUser(id, updatedUser)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

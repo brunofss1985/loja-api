@@ -1,9 +1,11 @@
 package com.loja.loja_api.service;
 
+import com.loja.loja_api.model.ChangePasswordResult;
 import com.loja.loja_api.model.User;
 import com.loja.loja_api.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,11 +16,28 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public User getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         var userDetails = (User) authentication.getPrincipal();
         return userRepository.findById(userDetails.getId()).orElse(null);
+    }
+
+    public ChangePasswordResult changePassword(String currentPassword, String newPassword) {
+        var currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return ChangePasswordResult.failure("Usuário não encontrado.");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
+            return ChangePasswordResult.failure("Senha antiga incorreta.");
+        }
+
+        currentUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(currentUser);
+
+        return ChangePasswordResult.success();
     }
 
     public Optional<User> getById(String id) {
@@ -41,7 +60,10 @@ public class UserService {
         return userRepository.findById(id).map(existing -> {
             existing.setName(updatedUser.getName());
             existing.setEmail(updatedUser.getEmail());
-            existing.setUserType(updatedUser.getUserType());
+            // 🔐 Verifica se o userType enviado na requisição é válido antes de atualizar
+            if (updatedUser.getUserType() != null) {
+                existing.setUserType(updatedUser.getUserType());
+            }
             existing.setPhone(updatedUser.getPhone());
             existing.setAddress(updatedUser.getAddress());
             existing.setPoints(updatedUser.getPoints());
