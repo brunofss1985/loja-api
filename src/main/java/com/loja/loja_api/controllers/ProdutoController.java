@@ -24,6 +24,7 @@ public class ProdutoController {
     public ResponseEntity<Page<Produto>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
             @RequestParam(required = false) List<String> marcas,
+            @RequestParam(required = false) List<String> objetivos, // ✅ NOVO PARÂMETRO
             @RequestParam(defaultValue = "0.0") double minPreco,
             @RequestParam(defaultValue = "999999.99") double maxPreco,
             @RequestParam(defaultValue = "0") int page,
@@ -32,10 +33,12 @@ public class ProdutoController {
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
+        List<String> objetivosNorm = normalizeCommaAndRepeatParams(objetivos); // ✅ NORMALIZAÇÃO DO NOVO PARÂMETRO
 
         Page<Produto> produtos = service.buscarProdutosComFiltros(
                 categoriasNorm,
                 marcasNorm,
+                objetivosNorm, // ✅ NOVO ARGUMENTO
                 minPreco,
                 maxPreco,
                 page,
@@ -85,6 +88,21 @@ public class ProdutoController {
         return ResponseEntity.ok(service.listarCategoriasPorMarcas(marcasNorm));
     }
 
+    // ✅ NOVO ENDPOINT PARA OBJETIVOS
+    @GetMapping("/objetivos")
+    public ResponseEntity<List<CountedItemDto>> listarObjetivos() {
+        return ResponseEntity.ok(service.listarObjetivos());
+    }
+
+    // ✅ NOVO ENDPOINT PARA OBJETIVOS POR CATEGORIA
+    @GetMapping("/objetivos-por-categoria")
+    public ResponseEntity<List<CountedItemDto>> listarObjetivosPorCategorias(
+            @RequestParam(required = false) List<String> categorias
+    ) {
+        List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
+        return ResponseEntity.ok(service.listarObjetivosPorCategorias(categoriasNorm));
+    }
+
     // Novos endpoints para a contagem total
     @GetMapping("/marcas/count")
     public ResponseEntity<Long> contarMarcas() {
@@ -94,6 +112,12 @@ public class ProdutoController {
     @GetMapping("/categorias/count")
     public ResponseEntity<Long> contarCategorias() {
         return ResponseEntity.ok(service.contarCategorias());
+    }
+
+    // ✅ NOVO ENDPOINT PARA CONTAGEM TOTAL DE OBJETIVOS
+    @GetMapping("/objetivos/count")
+    public ResponseEntity<Long> contarObjetivos() {
+        return ResponseEntity.ok(service.contarObjetivos());
     }
 
     @GetMapping("/{id}")

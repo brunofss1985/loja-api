@@ -18,65 +18,93 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     Page<Produto> findAll(Pageable pageable);
 
-    // ✨ NOVA QUERY: Busca por termo
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND " +
             "(LOWER(p.nome) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
             "LOWER(p.marca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
             "LOWER(p.descricao) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
             "LOWER(p.descricaoCurta) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-            "EXISTS (SELECT c FROM p.categorias c WHERE LOWER(c) LIKE LOWER(CONCAT('%', :termo, '%'))))")
+            "EXISTS (SELECT c FROM p.categorias c WHERE LOWER(c) LIKE LOWER(CONCAT('%', :termo, '%'))) OR " +
+            "EXISTS (SELECT o FROM p.objetivos o WHERE LOWER(o) LIKE LOWER(CONCAT('%', :termo, '%'))))") // ✅ ATUALIZADO: Inclui objetivos na busca por termo
     Page<Produto> findByTermo(@Param("termo") String termo, Pageable pageable);
 
-    // Queries para listar categorias/marcas com a contagem de produtos
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasWithCount();
 
-    // 🌟 CORREÇÃO FINAL: Ordenando pela contagem (mais robusto)
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasWithCount();
 
-    // Queries que contam o total de categorias/marcas
+    // ✅ NOVO: Conta a quantidade de produtos para cada objetivo
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(o, COUNT(p)) FROM Produto p JOIN p.objetivos o WHERE p.ativo = true GROUP BY o ORDER BY COUNT(p) DESC")
+    List<CountedItemDto> findDistinctObjetivosWithCount();
+
     @Query("SELECT COUNT(DISTINCT p.marca) FROM Produto p WHERE p.ativo = true")
     Long countDistinctMarcas();
 
     @Query("SELECT COUNT(DISTINCT c) FROM Produto p JOIN p.categorias c WHERE p.ativo = true")
     Long countDistinctCategorias();
 
+    // ✅ NOVO: Conta a quantidade total de objetivos
+    @Query("SELECT COUNT(DISTINCT o) FROM Produto p JOIN p.objetivos o WHERE p.ativo = true")
+    Long countDistinctObjetivos();
+
     // Consultas de filtro principal
-    // Lógica atualizada para usar CASE
-    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE " +
+    // ✅ ATUALIZADO: Inclui o novo parâmetro 'objetivos'
+    @Query("SELECT DISTINCT p FROM Produto p " +
+            "LEFT JOIN p.categorias c LEFT JOIN p.objetivos o WHERE " +
             "(:categorias IS NULL OR c IN :categorias) AND " +
             "(:marcas IS NULL OR p.marca IN :marcas) AND " +
+            "(:objetivos IS NULL OR o IN :objetivos) AND " +
             "(CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco) AND p.ativo = true")
     Page<Produto> findByFilters(@Param("categorias") List<String> categorias,
                                 @Param("marcas") List<String> marcas,
+                                @Param("objetivos") List<String> objetivos,
                                 @Param("minPreco") Double minPreco,
                                 @Param("maxPreco") Double maxPreco,
                                 Pageable pageable);
 
-    // Lógica atualizada para usar CASE
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco,
                                    @Param("maxPreco") Double maxPreco,
                                    Pageable pageable);
 
-    // Novo: Filtra por categorias usando MEMBER OF
-    // Lógica atualizada para usar CASE
+    // ✅ ATUALIZADO: Nova query para filtrar por objetivos
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByObjetivosAndPrice(@Param("objetivos") List<String> objetivos,
+                                          @Param("minPreco") Double minPreco,
+                                          @Param("maxPreco") Double maxPreco,
+                                          Pageable pageable);
+
+    // ✅ ATUALIZADO: Adicionada lógica de objetivos
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias,
                                            @Param("minPreco") Double minPreco,
                                            @Param("maxPreco") Double maxPreco,
                                            Pageable pageable);
 
-    // Lógica atualizada para usar CASE
+    // ✅ ATUALIZADO: Adicionada lógica de objetivos
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas,
                                        @Param("minPreco") Double minPreco,
                                        @Param("maxPreco") Double maxPreco,
                                        Pageable pageable);
 
-    // Novo: Filtra por categorias e marcas usando MEMBER OF
-    // Lógica atualizada para usar CASE
+    // ✅ NOVO: Filtra por categorias e objetivos
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndObjetivosAndPrice(@Param("categorias") List<String> categorias,
+                                                       @Param("objetivos") List<String> objetivos,
+                                                       @Param("minPreco") Double minPreco,
+                                                       @Param("maxPreco") Double maxPreco,
+                                                       Pageable pageable);
+
+    // ✅ NOVO: Filtra por marcas e objetivos
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND p.marca IN :marcas AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByMarcasAndObjetivosAndPrice(@Param("marcas") List<String> marcas,
+                                                   @Param("objetivos") List<String> objetivos,
+                                                   @Param("minPreco") Double minPreco,
+                                                   @Param("maxPreco") Double maxPreco,
+                                                   Pageable pageable);
+
+    // ✅ ATUALIZADO: Filtra por categorias e marcas
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias,
                                                     @Param("marcas") List<String> marcas,
@@ -84,13 +112,25 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                     @Param("maxPreco") Double maxPreco,
                                                     Pageable pageable);
 
+    // ✅ NOVO: Filtra por categorias, marcas e objetivos
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndMarcasAndObjetivosAndPrice(@Param("categorias") List<String> categorias,
+                                                                @Param("marcas") List<String> marcas,
+                                                                @Param("objetivos") List<String> objetivos,
+                                                                @Param("minPreco") Double minPreco,
+                                                                @Param("maxPreco") Double maxPreco,
+                                                                Pageable pageable);
+
     // Queries para buscar categorias/marcas com contagem com base em filtros cruzados
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
-    // 🌟 CORREÇÃO FINAL: Ordenando pela contagem (mais robusto)
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND p.marca IN :marcas GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasByMarcasWithCount(@Param("marcas") List<String> marcas);
+
+    // ✅ NOVO: Filtra os objetivos por categoria
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(o, COUNT(p)) FROM Produto p JOIN p.objetivos o JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY o ORDER BY o")
+    List<CountedItemDto> findDistinctObjetivosByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
     // Métodos auxiliares originais
     @Query("SELECT p FROM Produto p WHERE p.ativo = true")

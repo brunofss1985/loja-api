@@ -22,6 +22,7 @@ public class ProdutoDTO {
     private String descricao;
     private String descricaoCurta;
     private List<String> categorias;
+    private List<String> objetivos;
     private String sabor;
     private String tamanhoPorcao;
     private String fornecedor;

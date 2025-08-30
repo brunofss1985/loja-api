@@ -38,6 +38,12 @@ public class Produto {
     @Column(name = "categoria")
     private List<String> categorias;
 
+    @ElementCollection
+    @CollectionTable(name = "produto_objetivos", joinColumns = @JoinColumn(name = "produto_id"))
+    @Column(name = "objetivo")
+    private List<String> objetivos; // ✅ NOVO CAMPO: Adicionado para os objetivos
+
+
     private String sabor;
     private String tamanhoPorcao;
     private String statusAprovacao;
