@@ -46,6 +46,18 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos);
     }
 
+    // ✨ NOVO ENDPOINT DE BUSCA POR TERMO
+    @GetMapping("/search")
+    public ResponseEntity<Page<Produto>> buscarPorTermo(
+            @RequestParam String termo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sort
+    ) {
+        Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
+        return ResponseEntity.ok(produtos);
+    }
+
     // Endpoints para listar marcas/categorias com contagem de produtos
     @GetMapping("/marcas")
     public ResponseEntity<List<CountedItemDto>> listarMarcas() {

@@ -18,6 +18,15 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     Page<Produto> findAll(Pageable pageable);
 
+    // ✨ NOVA QUERY: Busca por termo
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND " +
+            "(LOWER(p.nome) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(p.marca) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(p.descricao) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(p.descricaoCurta) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "EXISTS (SELECT c FROM p.categorias c WHERE LOWER(c) LIKE LOWER(CONCAT('%', :termo, '%'))))")
+    Page<Produto> findByTermo(@Param("termo") String termo, Pageable pageable);
+
     // Queries para listar categorias/marcas com a contagem de produtos
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasWithCount();

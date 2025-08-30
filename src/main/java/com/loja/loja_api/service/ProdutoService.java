@@ -29,6 +29,21 @@ public class ProdutoService {
         return repository.findAll(pageable);
     }
 
+    // ✨ NOVO MÉTODO: Busca por termo
+    @Transactional(readOnly = true)
+    public Page<Produto> buscarPorTermo(String termo, int page, int size, String sort) {
+        Pageable pageable;
+        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
+            String[] sortParams = sort.split(",");
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sortedBy = Sort.by(direction, sortParams[0]);
+            pageable = PageRequest.of(page, size, sortedBy);
+        } else {
+            pageable = PageRequest.of(page, size);
+        }
+        return repository.findByTermo(termo, pageable);
+    }
+
     @Transactional(readOnly = true)
     public Page<Produto> buscarProdutosComFiltros(List<String> categorias, List<String> marcas,
                                                   Double minPreco, Double maxPreco,
