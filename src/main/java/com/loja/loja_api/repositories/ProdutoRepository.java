@@ -1,7 +1,7 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.dto.CountedItemDto;
+import com.loja.loja_api.model.Produto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,7 +24,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
             "LOWER(p.descricao) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
             "LOWER(p.descricaoCurta) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
             "EXISTS (SELECT c FROM p.categorias c WHERE LOWER(c) LIKE LOWER(CONCAT('%', :termo, '%'))) OR " +
-            "EXISTS (SELECT o FROM p.objetivos o WHERE LOWER(o) LIKE LOWER(CONCAT('%', :termo, '%'))))") // ✅ ATUALIZADO: Inclui objetivos na busca por termo
+            "EXISTS (SELECT o FROM p.objetivos o WHERE LOWER(o) LIKE LOWER(CONCAT('%', :termo, '%'))))")
     Page<Produto> findByTermo(@Param("termo") String termo, Pageable pageable);
 
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p WHERE p.ativo = true GROUP BY p.marca ORDER BY p.marca")
@@ -33,7 +33,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasWithCount();
 
-    // ✅ NOVO: Conta a quantidade de produtos para cada objetivo
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(o, COUNT(p)) FROM Produto p JOIN p.objetivos o WHERE p.ativo = true GROUP BY o ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctObjetivosWithCount();
 
@@ -43,12 +42,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT COUNT(DISTINCT c) FROM Produto p JOIN p.categorias c WHERE p.ativo = true")
     Long countDistinctCategorias();
 
-    // ✅ NOVO: Conta a quantidade total de objetivos
     @Query("SELECT COUNT(DISTINCT o) FROM Produto p JOIN p.objetivos o WHERE p.ativo = true")
     Long countDistinctObjetivos();
 
-    // Consultas de filtro principal
-    // ✅ ATUALIZADO: Inclui o novo parâmetro 'objetivos'
     @Query("SELECT DISTINCT p FROM Produto p " +
             "LEFT JOIN p.categorias c LEFT JOIN p.objetivos o WHERE " +
             "(:categorias IS NULL OR c IN :categorias) AND " +
@@ -67,28 +63,24 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                    @Param("maxPreco") Double maxPreco,
                                    Pageable pageable);
 
-    // ✅ ATUALIZADO: Nova query para filtrar por objetivos
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByObjetivosAndPrice(@Param("objetivos") List<String> objetivos,
                                           @Param("minPreco") Double minPreco,
                                           @Param("maxPreco") Double maxPreco,
                                           Pageable pageable);
 
-    // ✅ ATUALIZADO: Adicionada lógica de objetivos
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias,
                                            @Param("minPreco") Double minPreco,
                                            @Param("maxPreco") Double maxPreco,
                                            Pageable pageable);
 
-    // ✅ ATUALIZADO: Adicionada lógica de objetivos
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas,
                                        @Param("minPreco") Double minPreco,
                                        @Param("maxPreco") Double maxPreco,
                                        Pageable pageable);
 
-    // ✅ NOVO: Filtra por categorias e objetivos
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndObjetivosAndPrice(@Param("categorias") List<String> categorias,
                                                        @Param("objetivos") List<String> objetivos,
@@ -96,7 +88,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                        @Param("maxPreco") Double maxPreco,
                                                        Pageable pageable);
 
-    // ✅ NOVO: Filtra por marcas e objetivos
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND p.marca IN :marcas AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByMarcasAndObjetivosAndPrice(@Param("marcas") List<String> marcas,
                                                    @Param("objetivos") List<String> objetivos,
@@ -104,7 +95,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                    @Param("maxPreco") Double maxPreco,
                                                    Pageable pageable);
 
-    // ✅ ATUALIZADO: Filtra por categorias e marcas
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias,
                                                     @Param("marcas") List<String> marcas,
@@ -112,7 +102,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                     @Param("maxPreco") Double maxPreco,
                                                     Pageable pageable);
 
-    // ✅ NOVO: Filtra por categorias, marcas e objetivos
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findByCategoriasAndMarcasAndObjetivosAndPrice(@Param("categorias") List<String> categorias,
                                                                 @Param("marcas") List<String> marcas,
@@ -121,18 +110,15 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                                                                 @Param("maxPreco") Double maxPreco,
                                                                 Pageable pageable);
 
-    // Queries para buscar categorias/marcas com contagem com base em filtros cruzados
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND p.marca IN :marcas GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasByMarcasWithCount(@Param("marcas") List<String> marcas);
 
-    // ✅ NOVO: Filtra os objetivos por categoria
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(o, COUNT(p)) FROM Produto p JOIN p.objetivos o JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY o ORDER BY o")
     List<CountedItemDto> findDistinctObjetivosByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
-    // Métodos auxiliares originais
     @Query("SELECT p FROM Produto p WHERE p.ativo = true")
     List<Produto> findByAtivoTrue();
 
@@ -144,4 +130,13 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.precoDesconto IS NOT NULL AND p.precoDesconto > 0")
     List<Produto> findActiveProductsOnSale();
+
+    // NOVO: filtra por uma única marca
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca = :marca AND " +
+            "(CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findBySingleMarcaAndPrice(@Param("marca") String marca,
+                                            @Param("minPreco") Double minPreco,
+                                            @Param("maxPreco") Double maxPreco,
+                                            Pageable pageable);
+
 }

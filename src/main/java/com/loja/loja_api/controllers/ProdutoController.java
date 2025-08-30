@@ -1,9 +1,9 @@
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.ProdutoDTO;
+import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.service.ProdutoService;
-import com.loja.loja_api.dto.CountedItemDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ public class ProdutoController {
     public ResponseEntity<Page<Produto>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
             @RequestParam(required = false) List<String> marcas,
-            @RequestParam(required = false) List<String> objetivos, // ✅ NOVO PARÂMETRO
+            @RequestParam(required = false) List<String> objetivos,
             @RequestParam(defaultValue = "0.0") double minPreco,
             @RequestParam(defaultValue = "999999.99") double maxPreco,
             @RequestParam(defaultValue = "0") int page,
@@ -33,12 +33,12 @@ public class ProdutoController {
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
-        List<String> objetivosNorm = normalizeCommaAndRepeatParams(objetivos); // ✅ NORMALIZAÇÃO DO NOVO PARÂMETRO
+        List<String> objetivosNorm = normalizeCommaAndRepeatParams(objetivos);
 
         Page<Produto> produtos = service.buscarProdutosComFiltros(
                 categoriasNorm,
                 marcasNorm,
-                objetivosNorm, // ✅ NOVO ARGUMENTO
+                objetivosNorm,
                 minPreco,
                 maxPreco,
                 page,
@@ -49,7 +49,6 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos);
     }
 
-    // ✨ NOVO ENDPOINT DE BUSCA POR TERMO
     @GetMapping("/search")
     public ResponseEntity<Page<Produto>> buscarPorTermo(
             @RequestParam String termo,
@@ -61,7 +60,6 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos);
     }
 
-    // Endpoints para listar marcas/categorias com contagem de produtos
     @GetMapping("/marcas")
     public ResponseEntity<List<CountedItemDto>> listarMarcas() {
         return ResponseEntity.ok(service.listarMarcas());
@@ -88,13 +86,11 @@ public class ProdutoController {
         return ResponseEntity.ok(service.listarCategoriasPorMarcas(marcasNorm));
     }
 
-    // ✅ NOVO ENDPOINT PARA OBJETIVOS
     @GetMapping("/objetivos")
     public ResponseEntity<List<CountedItemDto>> listarObjetivos() {
         return ResponseEntity.ok(service.listarObjetivos());
     }
 
-    // ✅ NOVO ENDPOINT PARA OBJETIVOS POR CATEGORIA
     @GetMapping("/objetivos-por-categoria")
     public ResponseEntity<List<CountedItemDto>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
@@ -103,7 +99,6 @@ public class ProdutoController {
         return ResponseEntity.ok(service.listarObjetivosPorCategorias(categoriasNorm));
     }
 
-    // Novos endpoints para a contagem total
     @GetMapping("/marcas/count")
     public ResponseEntity<Long> contarMarcas() {
         return ResponseEntity.ok(service.contarMarcas());
@@ -114,7 +109,6 @@ public class ProdutoController {
         return ResponseEntity.ok(service.contarCategorias());
     }
 
-    // ✅ NOVO ENDPOINT PARA CONTAGEM TOTAL DE OBJETIVOS
     @GetMapping("/objetivos/count")
     public ResponseEntity<Long> contarObjetivos() {
         return ResponseEntity.ok(service.contarObjetivos());

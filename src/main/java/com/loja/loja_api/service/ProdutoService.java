@@ -34,7 +34,8 @@ public class ProdutoService {
         Pageable pageable;
         if (sort != null && !sort.equalsIgnoreCase("relevance")) {
             String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
+                    Sort.Direction.DESC : Sort.Direction.ASC;
             Sort sortedBy = Sort.by(direction, sortParams[0]);
             pageable = PageRequest.of(page, size, sortedBy);
         } else {
@@ -43,17 +44,23 @@ public class ProdutoService {
         return repository.findByTermo(termo, pageable);
     }
 
-    // ✅ MÉTODO ATUALIZADO: Inclui o novo parâmetro "objetivos"
+    // ✅ Inclui o novo parâmetro "objetivos"
     @Transactional(readOnly = true)
-    public Page<Produto> buscarProdutosComFiltros(List<String> categorias, List<String> marcas, List<String> objetivos,
-                                                  Double minPreco, Double maxPreco,
-                                                  int page, int size,
-                                                  String sort) {
-
+    public Page<Produto> buscarProdutosComFiltros(
+            List<String> categorias,
+            List<String> marcas,
+            List<String> objetivos,
+            Double minPreco,
+            Double maxPreco,
+            int page,
+            int size,
+            String sort
+    ) {
         Pageable pageable;
         if (sort != null && !sort.equalsIgnoreCase("relevance")) {
             String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
+                    Sort.Direction.DESC : Sort.Direction.ASC;
             Sort sortedBy = Sort.by(direction, sortParams[0]);
             pageable = PageRequest.of(page, size, sortedBy);
         } else {
@@ -62,27 +69,33 @@ public class ProdutoService {
 
         List<String> categoriasFiltro = normalizeList(categorias);
         List<String> marcasFiltro = normalizeList(marcas);
-        List<String> objetivosFiltro = normalizeList(objetivos); // ✅ Normaliza a lista de objetivos
+        List<String> objetivosFiltro = normalizeList(objetivos);
 
         boolean temCategorias = categoriasFiltro != null && !categoriasFiltro.isEmpty();
         boolean temMarcas = marcasFiltro != null && !marcasFiltro.isEmpty();
-        boolean temObjetivos = objetivosFiltro != null && !objetivosFiltro.isEmpty(); // ✅ Nova verificação
+        boolean temObjetivos = objetivosFiltro != null && !objetivosFiltro.isEmpty();
 
-        // Lógica de filtragem combinando todos os parâmetros
         if (temCategorias && temMarcas && temObjetivos) {
-            return repository.findByCategoriasAndMarcasAndObjetivosAndPrice(categoriasFiltro, marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
+            return repository.findByCategoriasAndMarcasAndObjetivosAndPrice(
+                    categoriasFiltro, marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
         } else if (temCategorias && temMarcas) {
-            return repository.findByCategoriasAndMarcasAndPrice(categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
+            return repository.findByCategoriasAndMarcasAndPrice(
+                    categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
         } else if (temCategorias && temObjetivos) {
-            return repository.findByCategoriasAndObjetivosAndPrice(categoriasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
+            return repository.findByCategoriasAndObjetivosAndPrice(
+                    categoriasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
         } else if (temMarcas && temObjetivos) {
-            return repository.findByMarcasAndObjetivosAndPrice(marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
+            return repository.findByMarcasAndObjetivosAndPrice(
+                    marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
         } else if (temCategorias) {
-            return repository.findByCategoriasAndPrice(categoriasFiltro, minPreco, maxPreco, pageable);
+            return repository.findByCategoriasAndPrice(
+                    categoriasFiltro, minPreco, maxPreco, pageable);
         } else if (temMarcas) {
-            return repository.findByMarcasAndPrice(marcasFiltro, minPreco, maxPreco, pageable);
+            return repository.findByMarcasAndPrice(
+                    marcasFiltro, minPreco, maxPreco, pageable);
         } else if (temObjetivos) {
-            return repository.findByObjetivosAndPrice(objetivosFiltro, minPreco, maxPreco, pageable);
+            return repository.findByObjetivosAndPrice(
+                    objetivosFiltro, minPreco, maxPreco, pageable);
         } else {
             return repository.findByPriceRange(minPreco, maxPreco, pageable);
         }
@@ -116,13 +129,12 @@ public class ProdutoService {
         return repository.findDistinctCategoriasByMarcasWithCount(norm);
     }
 
-    // ✅ NOVO MÉTODO: Lista objetivos com contagem
+    // ✅ Objetivos
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarObjetivos() {
         return repository.findDistinctObjetivosWithCount();
     }
 
-    // ✅ NOVO MÉTODO: Lista objetivos por categoria
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
         List<String> norm = normalizeList(categorias);
@@ -142,7 +154,6 @@ public class ProdutoService {
         return repository.countDistinctCategorias();
     }
 
-    // ✅ NOVO MÉTODO: Conta o total de objetivos
     @Transactional(readOnly = true)
     public Long contarObjetivos() {
         return repository.countDistinctObjetivos();
@@ -205,7 +216,7 @@ public class ProdutoService {
             existente.setQuantidadeVendida(dto.getQuantidadeVendida());
             existente.setVendasMensais(dto.getVendasMensais());
 
-            // ✅ NOVO: Incluindo objetivos na atualização
+            // ✅ Objetivos também na atualização
             existente.setObjetivos(dto.getObjetivos());
 
             if (imagem != null && !imagem.isEmpty()) {
@@ -273,7 +284,7 @@ public class ProdutoService {
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())
                 .categorias(dto.getCategorias())
-                .objetivos(dto.getObjetivos()) // ✅ NOVO: Incluindo objetivos na construção
+                .objetivos(dto.getObjetivos())
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())
