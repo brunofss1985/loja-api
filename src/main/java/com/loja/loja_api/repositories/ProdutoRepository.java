@@ -105,7 +105,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(c, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND p.marca IN :marcas GROUP BY c ORDER BY COUNT(p) DESC")
     List<CountedItemDto> findDistinctCategoriasByMarcasWithCount(@Param("marcas") List<String> marcas);
 
-    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(o, COUNT(p)) FROM Produto p JOIN p.objetivos o JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY o ORDER BY o")
+    // ✅ Linha corrigida, removendo o "ORDER BY o"
+    @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(o, COUNT(p)) FROM Produto p JOIN p.objetivos o JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY o")
     List<CountedItemDto> findDistinctObjetivosByCategoriasWithCount(@Param("categorias") List<String> categorias);
 
     @Query("SELECT p FROM Produto p WHERE p.ativo = true")
