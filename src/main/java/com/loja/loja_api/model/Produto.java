@@ -41,14 +41,13 @@ public class Produto {
     @ElementCollection
     @CollectionTable(name = "produto_objetivos", joinColumns = @JoinColumn(name = "produto_id"))
     @Column(name = "objetivo")
-    private List<String> objetivos; // ✅ NOVO CAMPO: Adicionado para os objetivos
-
+    private List<String> objetivos;
 
     private String sabor;
     private String tamanhoPorcao;
     private String statusAprovacao;
     private String fornecedor;
-    private String disponibilidade; // <<< Novo campo adicionado
+    private String disponibilidade;
 
     private Double peso;
     private Double preco;
@@ -57,6 +56,7 @@ public class Produto {
     private Double custo;
     private Double lucroEstimado;
     private Boolean ativo;
+    private Boolean destaque; // ✅ NOVO CAMPO: Destaque
 
     // Estoque e logística
     private Integer estoque;

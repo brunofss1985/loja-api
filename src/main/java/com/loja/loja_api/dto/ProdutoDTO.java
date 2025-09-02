@@ -27,7 +27,7 @@ public class ProdutoDTO {
     private String tamanhoPorcao;
     private String fornecedor;
     private String statusAprovacao;
-    private String disponibilidade; // <<< Novo campo adicionado
+    private String disponibilidade;
 
     // Valores
     private Double peso;
@@ -37,6 +37,7 @@ public class ProdutoDTO {
     private Double custo;
     private Double lucroEstimado;
     private Boolean ativo;
+    private Boolean destaque; // ✅ NOVO CAMPO: Destaque
 
     // Estoque e logística
     private Integer estoque;

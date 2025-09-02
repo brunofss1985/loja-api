@@ -44,7 +44,13 @@ public class ProdutoService {
         return repository.findByTermo(termo, pageable);
     }
 
-    // ✅ Inclui o novo parâmetro "objetivos"
+    @Transactional(readOnly = true)
+    public Page<Produto> buscarProdutosEmDestaque(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findByDestaqueAndAtivoTrue(pageable);
+    }
+
+    // ✅ Parâmetros "objetivos" e "destaque" adicionados
     @Transactional(readOnly = true)
     public Page<Produto> buscarProdutosComFiltros(
             List<String> categorias,
@@ -54,7 +60,8 @@ public class ProdutoService {
             Double maxPreco,
             int page,
             int size,
-            String sort
+            String sort,
+            Boolean destaque
     ) {
         Pageable pageable;
         if (sort != null && !sort.equalsIgnoreCase("relevance")) {
@@ -74,19 +81,42 @@ public class ProdutoService {
         boolean temCategorias = categoriasFiltro != null && !categoriasFiltro.isEmpty();
         boolean temMarcas = marcasFiltro != null && !marcasFiltro.isEmpty();
         boolean temObjetivos = objetivosFiltro != null && !objetivosFiltro.isEmpty();
+        boolean temDestaque = destaque != null;
 
-        if (temCategorias && temMarcas && temObjetivos) {
+        // ✅ Lógica de if/else if com as novas combinações de campos
+        if (temCategorias && temMarcas && temObjetivos && temDestaque) {
+            return repository.findByCategoriasAndMarcasAndObjetivosAndDestaqueAndPrice(
+                    categoriasFiltro, marcasFiltro, objetivosFiltro, destaque, minPreco, maxPreco, pageable);
+        } else if (temCategorias && temMarcas && temObjetivos) {
             return repository.findByCategoriasAndMarcasAndObjetivosAndPrice(
                     categoriasFiltro, marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
+        } else if (temCategorias && temMarcas && temDestaque) {
+            return repository.findByCategoriasAndMarcasAndDestaqueAndPrice(
+                    categoriasFiltro, marcasFiltro, destaque, minPreco, maxPreco, pageable);
+        } else if (temCategorias && temObjetivos && temDestaque) {
+            return repository.findByCategoriasAndObjetivosAndDestaqueAndPrice(
+                    categoriasFiltro, objetivosFiltro, destaque, minPreco, maxPreco, pageable);
+        } else if (temMarcas && temObjetivos && temDestaque) {
+            return repository.findByMarcasAndObjetivosAndDestaqueAndPrice(
+                    marcasFiltro, objetivosFiltro, destaque, minPreco, maxPreco, pageable);
         } else if (temCategorias && temMarcas) {
             return repository.findByCategoriasAndMarcasAndPrice(
                     categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
         } else if (temCategorias && temObjetivos) {
             return repository.findByCategoriasAndObjetivosAndPrice(
                     categoriasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
+        } else if (temCategorias && temDestaque) {
+            return repository.findByCategoriasAndDestaqueAndPrice(
+                    categoriasFiltro, destaque, minPreco, maxPreco, pageable);
         } else if (temMarcas && temObjetivos) {
             return repository.findByMarcasAndObjetivosAndPrice(
                     marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
+        } else if (temMarcas && temDestaque) {
+            return repository.findByMarcasAndDestaqueAndPrice(
+                    marcasFiltro, destaque, minPreco, maxPreco, pageable);
+        } else if (temObjetivos && temDestaque) {
+            return repository.findByObjetivosAndDestaqueAndPrice(
+                    objetivosFiltro, destaque, minPreco, maxPreco, pageable);
         } else if (temCategorias) {
             return repository.findByCategoriasAndPrice(
                     categoriasFiltro, minPreco, maxPreco, pageable);
@@ -96,6 +126,9 @@ public class ProdutoService {
         } else if (temObjetivos) {
             return repository.findByObjetivosAndPrice(
                     objetivosFiltro, minPreco, maxPreco, pageable);
+        } else if (temDestaque) {
+            return repository.findByDestaqueAndPrice(
+                    destaque, minPreco, maxPreco, pageable);
         } else {
             return repository.findByPriceRange(minPreco, maxPreco, pageable);
         }
@@ -129,12 +162,13 @@ public class ProdutoService {
         return repository.findDistinctCategoriasByMarcasWithCount(norm);
     }
 
-    // ✅ Objetivos
+    // ✅ Novo método para listar objetivos
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarObjetivos() {
         return repository.findDistinctObjetivosWithCount();
     }
 
+    // ✅ Novo método para listar objetivos por categoria
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
         List<String> norm = normalizeList(categorias);
@@ -154,6 +188,7 @@ public class ProdutoService {
         return repository.countDistinctCategorias();
     }
 
+    // ✅ Novo método para contar objetivos
     @Transactional(readOnly = true)
     public Long contarObjetivos() {
         return repository.countDistinctObjetivos();
@@ -193,6 +228,8 @@ public class ProdutoService {
             existente.setLucroEstimado(dto.getLucroEstimado());
             existente.setStatusAprovacao(dto.getStatusAprovacao());
             existente.setAtivo(dto.getAtivo());
+            existente.setDestaque(dto.getDestaque()); // ✅ Adicionando destaque na atualização
+            existente.setObjetivos(dto.getObjetivos()); // ✅ Adicionando objetivos na atualização
             existente.setDisponibilidade(dto.getDisponibilidade());
             existente.setEstoque(dto.getEstoque());
             existente.setEstoqueMinimo(dto.getEstoqueMinimo());
@@ -215,9 +252,6 @@ public class ProdutoService {
             existente.setPrazoEntregaFornecedor(dto.getPrazoEntregaFornecedor());
             existente.setQuantidadeVendida(dto.getQuantidadeVendida());
             existente.setVendasMensais(dto.getVendasMensais());
-
-            // ✅ Objetivos também na atualização
-            existente.setObjetivos(dto.getObjetivos());
 
             if (imagem != null && !imagem.isEmpty()) {
                 existente.setImagem(imagem.getBytes());
@@ -284,7 +318,7 @@ public class ProdutoService {
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())
                 .categorias(dto.getCategorias())
-                .objetivos(dto.getObjetivos())
+                .objetivos(dto.getObjetivos()) // ✅ Adicionando objetivos na construção
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())
@@ -296,6 +330,7 @@ public class ProdutoService {
                 .lucroEstimado(dto.getLucroEstimado())
                 .statusAprovacao(dto.getStatusAprovacao())
                 .ativo(dto.getAtivo())
+                .destaque(dto.getDestaque()) // ✅ Adicionando destaque na construção
                 .disponibilidade(dto.getDisponibilidade())
                 .estoque(dto.getEstoque())
                 .estoqueMinimo(dto.getEstoqueMinimo())

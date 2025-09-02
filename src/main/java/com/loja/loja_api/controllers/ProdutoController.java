@@ -29,7 +29,8 @@ public class ProdutoController {
             @RequestParam(defaultValue = "999999.99") double maxPreco,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String sort
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Boolean destaque // ✅ Novo parâmetro adicionado
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
@@ -43,7 +44,8 @@ public class ProdutoController {
                 maxPreco,
                 page,
                 size,
-                sort
+                sort,
+                destaque // ✅ Passando o novo parâmetro para o serviço
         );
 
         return ResponseEntity.ok(produtos);
@@ -57,6 +59,15 @@ public class ProdutoController {
             @RequestParam(required = false) String sort
     ) {
         Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
+        return ResponseEntity.ok(produtos);
+    }
+
+    @GetMapping("/destaques") // ✅ Novo endpoint para buscar destaques
+    public ResponseEntity<Page<Produto>> buscarProdutosEmDestaque(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<Produto> produtos = service.buscarProdutosEmDestaque(page, size);
         return ResponseEntity.ok(produtos);
     }
 

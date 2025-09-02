@@ -16,6 +16,9 @@ import java.util.List;
 @Transactional(readOnly = true)
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.destaque = true")
+    Page<Produto> findByDestaqueAndAtivoTrue(Pageable pageable);
+
     Page<Produto> findAll(Pageable pageable);
 
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND " +
@@ -45,70 +48,56 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT COUNT(DISTINCT o) FROM Produto p JOIN p.objetivos o WHERE p.ativo = true")
     Long countDistinctObjetivos();
 
-    @Query("SELECT DISTINCT p FROM Produto p " +
-            "LEFT JOIN p.categorias c LEFT JOIN p.objetivos o WHERE " +
-            "(:categorias IS NULL OR c IN :categorias) AND " +
-            "(:marcas IS NULL OR p.marca IN :marcas) AND " +
-            "(:objetivos IS NULL OR o IN :objetivos) AND " +
-            "(CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco) AND p.ativo = true")
-    Page<Produto> findByFilters(@Param("categorias") List<String> categorias,
-                                @Param("marcas") List<String> marcas,
-                                @Param("objetivos") List<String> objetivos,
-                                @Param("minPreco") Double minPreco,
-                                @Param("maxPreco") Double maxPreco,
-                                Pageable pageable);
-
+    // Consultas originais com preço
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco,
-                                   @Param("maxPreco") Double maxPreco,
-                                   Pageable pageable);
+    Page<Produto> findByPriceRange(@Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByObjetivosAndPrice(@Param("objetivos") List<String> objetivos,
-                                          @Param("minPreco") Double minPreco,
-                                          @Param("maxPreco") Double maxPreco,
-                                          Pageable pageable);
+    Page<Produto> findByObjetivosAndPrice(@Param("objetivos") List<String> objetivos, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias,
-                                           @Param("minPreco") Double minPreco,
-                                           @Param("maxPreco") Double maxPreco,
-                                           Pageable pageable);
+    Page<Produto> findByCategoriasAndPrice(@Param("categorias") List<String> categorias, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas,
-                                       @Param("minPreco") Double minPreco,
-                                       @Param("maxPreco") Double maxPreco,
-                                       Pageable pageable);
+    Page<Produto> findByMarcasAndPrice(@Param("marcas") List<String> marcas, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByCategoriasAndObjetivosAndPrice(@Param("categorias") List<String> categorias,
-                                                       @Param("objetivos") List<String> objetivos,
-                                                       @Param("minPreco") Double minPreco,
-                                                       @Param("maxPreco") Double maxPreco,
-                                                       Pageable pageable);
+    Page<Produto> findByCategoriasAndObjetivosAndPrice(@Param("categorias") List<String> categorias, @Param("objetivos") List<String> objetivos, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND p.marca IN :marcas AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByMarcasAndObjetivosAndPrice(@Param("marcas") List<String> marcas,
-                                                   @Param("objetivos") List<String> objetivos,
-                                                   @Param("minPreco") Double minPreco,
-                                                   @Param("maxPreco") Double maxPreco,
-                                                   Pageable pageable);
+    Page<Produto> findByMarcasAndObjetivosAndPrice(@Param("marcas") List<String> marcas, @Param("objetivos") List<String> objetivos, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias,
-                                                    @Param("marcas") List<String> marcas,
-                                                    @Param("minPreco") Double minPreco,
-                                                    @Param("maxPreco") Double maxPreco,
-                                                    Pageable pageable);
+    Page<Produto> findByCategoriasAndMarcasAndPrice(@Param("categorias") List<String> categorias, @Param("marcas") List<String> marcas, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND o IN :objetivos AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
-    Page<Produto> findByCategoriasAndMarcasAndObjetivosAndPrice(@Param("categorias") List<String> categorias,
-                                                                @Param("marcas") List<String> marcas,
-                                                                @Param("objetivos") List<String> objetivos,
-                                                                @Param("minPreco") Double minPreco,
-                                                                @Param("maxPreco") Double maxPreco,
-                                                                Pageable pageable);
+    Page<Produto> findByCategoriasAndMarcasAndObjetivosAndPrice(@Param("categorias") List<String> categorias, @Param("marcas") List<String> marcas, @Param("objetivos") List<String> objetivos, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    // ✅ Novas consultas para o campo 'destaque'
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByDestaqueAndPrice(@Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndDestaqueAndPrice(@Param("categorias") List<String> categorias, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca IN :marcas AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByMarcasAndDestaqueAndPrice(@Param("marcas") List<String> marcas, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND o IN :objetivos AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByObjetivosAndDestaqueAndPrice(@Param("objetivos") List<String> objetivos, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndMarcasAndDestaqueAndPrice(@Param("categorias") List<String> categorias, @Param("marcas") List<String> marcas, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND o IN :objetivos AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndObjetivosAndDestaqueAndPrice(@Param("categorias") List<String> categorias, @Param("objetivos") List<String> objetivos, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.objetivos o WHERE p.ativo = true AND p.marca IN :marcas AND o IN :objetivos AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByMarcasAndObjetivosAndDestaqueAndPrice(@Param("marcas") List<String> marcas, @Param("objetivos") List<String> objetivos, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Produto p JOIN p.categorias c JOIN p.objetivos o WHERE p.ativo = true AND c IN :categorias AND p.marca IN :marcas AND o IN :objetivos AND p.destaque = :destaque AND (CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
+    Page<Produto> findByCategoriasAndMarcasAndObjetivosAndDestaqueAndPrice(@Param("categorias") List<String> categorias, @Param("marcas") List<String> marcas, @Param("objetivos") List<String> objetivos, @Param("destaque") Boolean destaque, @Param("minPreco") Double minPreco, @Param("maxPreco") Double maxPreco, Pageable pageable);
+
 
     @Query("SELECT new com.loja.loja_api.dto.CountedItemDto(p.marca, COUNT(p)) FROM Produto p JOIN p.categorias c WHERE p.ativo = true AND c IN :categorias GROUP BY p.marca ORDER BY p.marca")
     List<CountedItemDto> findDistinctMarcasByCategoriasWithCount(@Param("categorias") List<String> categorias);
@@ -131,12 +120,10 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.precoDesconto IS NOT NULL AND p.precoDesconto > 0")
     List<Produto> findActiveProductsOnSale();
 
-    // NOVO: filtra por uma única marca
     @Query("SELECT p FROM Produto p WHERE p.ativo = true AND p.marca = :marca AND " +
             "(CASE WHEN p.precoDesconto > 0 THEN p.precoDesconto ELSE p.preco END BETWEEN :minPreco AND :maxPreco)")
     Page<Produto> findBySingleMarcaAndPrice(@Param("marca") String marca,
                                             @Param("minPreco") Double minPreco,
                                             @Param("maxPreco") Double maxPreco,
                                             Pageable pageable);
-
 }
