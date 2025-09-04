@@ -2,9 +2,7 @@ package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
-import com.loja.loja_api.repositories.FiltroRepository;
 import com.loja.loja_api.repositories.ProdutoRepository;
-import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.repositories.ProdutoSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,9 +24,9 @@ public class ProdutoService {
     @Autowired
     private ProdutoRepository repository;
 
-    // ✅ Injetando a nova dependência
-//    @Autowired
-//    private FiltroRepository filtroRepository;
+    // ✅ Injetando o novo ImagemService
+    @Autowired
+    private ImagemService imagemService;
 
     @Transactional(readOnly = true)
     public Page<Produto> listarTodosPaginado(int page, int size) {
@@ -95,72 +93,6 @@ public class ProdutoService {
 
         return repository.findAll(spec, pageable);
     }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public List<CountedItemDto> listarMarcas() {
-//        return filtroRepository.findDistinctMarcasWithCount();
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public List<CountedItemDto> listarCategorias() {
-//        return filtroRepository.findDistinctCategoriasWithCount();
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public List<CountedItemDto> listarMarcasPorCategorias(List<String> categorias) {
-//        List<String> norm = normalizeList(categorias);
-//        if (norm == null || norm.isEmpty()) {
-//            return listarMarcas();
-//        }
-//        return filtroRepository.findDistinctMarcasByCategoriasWithCount(norm);
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public List<CountedItemDto> listarCategoriasPorMarcas(List<String> marcas) {
-//        List<String> norm = normalizeList(marcas);
-//        if (norm == null || norm.isEmpty()) {
-//            return listarCategorias();
-//        }
-//        return filtroRepository.findDistinctCategoriasByMarcasWithCount(norm);
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public List<CountedItemDto> listarObjetivos() {
-//        return filtroRepository.findDistinctObjetivosWithCount();
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
-//        List<String> norm = normalizeList(categorias);
-//        if (norm == null || norm.isEmpty()) {
-//            return listarObjetivos();
-//        }
-//        return filtroRepository.findDistinctObjetivosByCategoriasWithCount(norm);
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public Long contarMarcas() {
-//        return filtroRepository.countDistinctMarcas();
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public Long contarCategorias() {
-//        return filtroRepository.countDistinctCategorias();
-//    }
-//
-//    // ✅ Usando o novo filtroRepository
-//    @Transactional(readOnly = true)
-//    public Long contarObjetivos() {
-//        return filtroRepository.countDistinctObjetivos();
-//    }
 
     @Transactional(readOnly = true)
     public Produto buscarPorId(Long id) {
@@ -170,7 +102,54 @@ public class ProdutoService {
 
     @Transactional
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        Produto produto = construirProduto(dto, imagem, galeriaArquivos);
+        // ✅ A lógica de processamento de imagens foi movida para o ImagemService
+        Produto produto = Produto.builder()
+                .nome(dto.getNome())
+                .marca(dto.getMarca())
+                .slug(dto.getSlug())
+                .descricao(dto.getDescricao())
+                .descricaoCurta(dto.getDescricaoCurta())
+                .categorias(dto.getCategorias())
+                .objetivos(dto.getObjetivos())
+                .peso(dto.getPeso())
+                .sabor(dto.getSabor())
+                .tamanhoPorcao(dto.getTamanhoPorcao())
+                .preco(dto.getPreco())
+                .precoDesconto(dto.getPrecoDesconto())
+                .porcentagemDesconto(dto.getPorcentagemDesconto())
+                .custo(dto.getCusto())
+                .fornecedor(dto.getFornecedor())
+                .lucroEstimado(dto.getLucroEstimado())
+                .statusAprovacao(dto.getStatusAprovacao())
+                .ativo(dto.getAtivo())
+                .destaque(dto.getDestaque())
+                .disponibilidade(dto.getDisponibilidade())
+                .estoque(dto.getEstoque())
+                .estoqueMinimo(dto.getEstoqueMinimo())
+                .estoqueMaximo(dto.getEstoqueMaximo())
+                .localizacaoFisica(dto.getLocalizacaoFisica())
+                .codigoBarras(dto.getCodigoBarras())
+                .dimensoes(dto.getDimensoes())
+                .restricoes(dto.getRestricoes())
+                .tabelaNutricional(dto.getTabelaNutricional())
+                .modoDeUso(dto.getModoDeUso())
+                .palavrasChave(dto.getPalavrasChave())
+                .avaliacaoMedia(dto.getAvaliacaoMedia())
+                .comentarios(dto.getComentarios())
+                .dataCadastro(dto.getDataCadastro())
+                .dataUltimaAtualizacao(dto.getDataUltimaAtualizacao())
+                .dataValidade(dto.getDataValidade())
+                .fornecedorId(dto.getFornecedorId())
+                .cnpjFornecedor(dto.getCnpjFornecedor())
+                .contatoFornecedor(dto.getContatoFornecedor())
+                .prazoEntregaFornecedor(dto.getPrazoEntregaFornecedor())
+                .quantidadeVendida(dto.getQuantidadeVendida())
+                .vendasMensais(dto.getVendasMensais())
+                .imagem(imagemService.processarImagem(imagem))
+                .imagemMimeType(imagemService.getImagemMimeType(imagem))
+                .galeria(imagemService.processarGaleria(galeriaArquivos))
+                .galeriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos))
+                .build();
         return repository.save(produto);
     }
 
@@ -221,29 +200,18 @@ public class ProdutoService {
             existente.setQuantidadeVendida(dto.getQuantidadeVendida());
             existente.setVendasMensais(dto.getVendasMensais());
 
+            // ✅ Lógica de processamento de imagens movida para o ImagemService
             if (imagem != null && !imagem.isEmpty()) {
-                existente.setImagem(imagem.getBytes());
-                existente.setImagemMimeType(imagem.getContentType());
+                existente.setImagem(imagemService.processarImagem(imagem));
+                existente.setImagemMimeType(imagemService.getImagemMimeType(imagem));
             }
-
             if (galeriaArquivos != null && !galeriaArquivos.isEmpty()) {
-                List<byte[]> novaGaleria = new ArrayList<>();
-                List<String> novosMimes = new ArrayList<>();
-
-                for (MultipartFile file : galeriaArquivos) {
-                    if (!file.isEmpty()) {
-                        novaGaleria.add(file.getBytes());
-                        novosMimes.add(file.getContentType());
-                    }
-                }
-
-                existente.setGaleria(novaGaleria);
-                existente.setGaleriaMimeTypes(novosMimes);
+                existente.setGaleria(imagemService.processarGaleria(galeriaArquivos));
+                existente.setGaleriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos));
             }
-
             return repository.save(existente);
 
-        } catch (IOException e) {
+        } catch (RuntimeException e) {
             throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage());
         }
     }
@@ -252,80 +220,6 @@ public class ProdutoService {
     public void deletar(Long id) {
         Produto produto = buscarPorId(id);
         repository.delete(produto);
-    }
-
-    private Produto construirProduto(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        byte[] imagemBytes = null;
-        String imagemMime = null;
-        List<byte[]> galeria = new ArrayList<>();
-        List<String> galeriaMimes = new ArrayList<>();
-
-        try {
-            if (imagem != null && !imagem.isEmpty()) {
-                imagemBytes = imagem.getBytes();
-                imagemMime = imagem.getContentType();
-            }
-
-            if (galeriaArquivos != null) {
-                for (MultipartFile file : galeriaArquivos) {
-                    if (!file.isEmpty()) {
-                        galeria.add(file.getBytes());
-                        galeriaMimes.add(file.getContentType());
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao processar imagens: " + e.getMessage());
-        }
-
-        return Produto.builder()
-                .nome(dto.getNome())
-                .marca(dto.getMarca())
-                .slug(dto.getSlug())
-                .descricao(dto.getDescricao())
-                .descricaoCurta(dto.getDescricaoCurta())
-                .categorias(dto.getCategorias())
-                .objetivos(dto.getObjetivos())
-                .peso(dto.getPeso())
-                .sabor(dto.getSabor())
-                .tamanhoPorcao(dto.getTamanhoPorcao())
-                .preco(dto.getPreco())
-                .precoDesconto(dto.getPrecoDesconto())
-                .porcentagemDesconto(dto.getPorcentagemDesconto())
-                .custo(dto.getCusto())
-                .fornecedor(dto.getFornecedor())
-                .lucroEstimado(dto.getLucroEstimado())
-                .statusAprovacao(dto.getStatusAprovacao())
-                .ativo(dto.getAtivo())
-                .destaque(dto.getDestaque())
-                .disponibilidade(dto.getDisponibilidade())
-                .estoque(dto.getEstoque())
-                .estoqueMinimo(dto.getEstoqueMinimo())
-                .estoqueMaximo(dto.getEstoqueMaximo())
-                .localizacaoFisica(dto.getLocalizacaoFisica())
-                .codigoBarras(dto.getCodigoBarras())
-                .dimensoes(dto.getDimensoes())
-                .restricoes(dto.getRestricoes())
-                .tabelaNutricional(dto.getTabelaNutricional())
-                .modoDeUso(dto.getModoDeUso())
-                .palavrasChave(dto.getPalavrasChave())
-                .avaliacaoMedia(dto.getAvaliacaoMedia())
-                .comentarios(dto.getComentarios())
-                .dataCadastro(dto.getDataCadastro())
-                .dataUltimaAtualizacao(dto.getDataUltimaAtualizacao())
-                .dataValidade(dto.getDataValidade())
-                .fornecedorId(dto.getFornecedorId())
-                .cnpjFornecedor(dto.getCnpjFornecedor())
-                .contatoFornecedor(dto.getContatoFornecedor())
-                .prazoEntregaFornecedor(dto.getPrazoEntregaFornecedor())
-                .quantidadeVendida(dto.getQuantidadeVendida())
-                .vendasMensais(dto.getVendasMensais())
-                .imagem(imagemBytes)
-                .imagemMimeType(imagemMime)
-                .galeria(galeria)
-                .galeriaMimeTypes(galeriaMimes)
-                .build();
     }
 
     private List<String> normalizeList(List<String> raw) {
