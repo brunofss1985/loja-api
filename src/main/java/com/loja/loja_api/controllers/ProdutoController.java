@@ -3,15 +3,15 @@ package com.loja.loja_api.controllers;
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.model.Produto;
-import com.loja.loja_api.service.FiltroService; // ✅ Importando o novo serviço
+import com.loja.loja_api.service.FiltroService;
 import com.loja.loja_api.service.ProdutoService;
+import com.loja.loja_api.util.ListUtils; // ✅ Importando a classe de utilitários
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -21,7 +21,6 @@ public class ProdutoController {
     @Autowired
     private ProdutoService service;
 
-    // ✅ Injetando o novo FiltroService
     @Autowired
     private FiltroService filtroService;
 
@@ -37,9 +36,9 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
-        List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
-        List<String> objetivosNorm = normalizeCommaAndRepeatParams(objetivos);
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
+        List<String> marcasNorm = ListUtils.normalizeList(marcas);         // ✅ Usando a classe de utilitários
+        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);   // ✅ Usando a classe de utilitários
 
         Page<Produto> produtos = service.buscarProdutosComFiltros(
                 categoriasNorm,
@@ -78,13 +77,11 @@ public class ProdutoController {
 
     @GetMapping("/marcas")
     public ResponseEntity<List<CountedItemDto>> listarMarcas() {
-        // ✅ Chamada agora para o novo filtroService
         return ResponseEntity.ok(filtroService.listarMarcas());
     }
 
     @GetMapping("/categorias")
     public ResponseEntity<List<CountedItemDto>> listarCategorias() {
-        // ✅ Chamada agora para o novo filtroService
         return ResponseEntity.ok(filtroService.listarCategorias());
     }
 
@@ -92,8 +89,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDto>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
-        // ✅ Chamada agora para o novo filtroService
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
         return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(categoriasNorm));
     }
 
@@ -101,14 +97,12 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDto>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
-        List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
-        // ✅ Chamada agora para o novo filtroService
+        List<String> marcasNorm = ListUtils.normalizeList(marcas); // ✅ Usando a classe de utilitários
         return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(marcasNorm));
     }
 
     @GetMapping("/objetivos")
     public ResponseEntity<List<CountedItemDto>> listarObjetivos() {
-        // ✅ Chamada agora para o novo filtroService
         return ResponseEntity.ok(filtroService.listarObjetivos());
     }
 
@@ -116,26 +110,22 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDto>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
-        // ✅ Chamada agora para o novo filtroService
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
         return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(categoriasNorm));
     }
 
     @GetMapping("/marcas/count")
     public ResponseEntity<Long> contarMarcas() {
-        // ✅ Chamada agora para o novo filtroService
         return ResponseEntity.ok(filtroService.contarMarcas());
     }
 
     @GetMapping("/categorias/count")
     public ResponseEntity<Long> contarCategorias() {
-        // ✅ Chamada agora para o novo filtroService
         return ResponseEntity.ok(filtroService.contarCategorias());
     }
 
     @GetMapping("/objetivos/count")
     public ResponseEntity<Long> contarObjetivos() {
-        // ✅ Chamada agora para o novo filtroService
         return ResponseEntity.ok(filtroService.contarObjetivos());
     }
 
@@ -167,19 +157,5 @@ public class ProdutoController {
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         service.deletar(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private List<String> normalizeCommaAndRepeatParams(List<String> raw) {
-        if (raw == null || raw.isEmpty()) return null;
-        List<String> out = new ArrayList<>();
-        for (String item : raw) {
-            if (item == null) continue;
-            String[] parts = item.split(",");
-            for (String p : parts) {
-                String t = p.trim();
-                if (!t.isEmpty()) out.add(t);
-            }
-        }
-        return out.isEmpty() ? null : out;
     }
 }

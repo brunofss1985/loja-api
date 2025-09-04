@@ -4,6 +4,7 @@ import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification;
+import com.loja.loja_api.util.ListUtils; // ✅ Importando a nova classe de utilitários
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +25,6 @@ public class ProdutoService {
     @Autowired
     private ProdutoRepository repository;
 
-    // ✅ Injetando o novo ImagemService
     @Autowired
     private ImagemService imagemService;
 
@@ -78,9 +78,9 @@ public class ProdutoService {
             pageable = PageRequest.of(page, size);
         }
 
-        List<String> categoriasFiltro = normalizeList(categorias);
-        List<String> marcasFiltro = normalizeList(marcas);
-        List<String> objetivosFiltro = normalizeList(objetivos);
+        List<String> categoriasFiltro = ListUtils.normalizeList(categorias); // ✅ Chamada corrigida
+        List<String> marcasFiltro = ListUtils.normalizeList(marcas);         // ✅ Chamada corrigida
+        List<String> objetivosFiltro = ListUtils.normalizeList(objetivos);   // ✅ Chamada corrigida
 
         Specification<Produto> spec = ProdutoSpecification.comFiltros(
                 categoriasFiltro,
@@ -102,7 +102,6 @@ public class ProdutoService {
 
     @Transactional
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        // ✅ A lógica de processamento de imagens foi movida para o ImagemService
         Produto produto = Produto.builder()
                 .nome(dto.getNome())
                 .marca(dto.getMarca())
@@ -200,7 +199,6 @@ public class ProdutoService {
             existente.setQuantidadeVendida(dto.getQuantidadeVendida());
             existente.setVendasMensais(dto.getVendasMensais());
 
-            // ✅ Lógica de processamento de imagens movida para o ImagemService
             if (imagem != null && !imagem.isEmpty()) {
                 existente.setImagem(imagemService.processarImagem(imagem));
                 existente.setImagemMimeType(imagemService.getImagemMimeType(imagem));
@@ -220,18 +218,5 @@ public class ProdutoService {
     public void deletar(Long id) {
         Produto produto = buscarPorId(id);
         repository.delete(produto);
-    }
-
-    private List<String> normalizeList(List<String> raw) {
-        if (raw == null || raw.isEmpty()) return null;
-        List<String> out = new ArrayList<>();
-        for (String s : raw) {
-            if (s == null) continue;
-            for (String p : s.split(",")) {
-                String t = p.trim();
-                if (!t.isEmpty()) out.add(t);
-            }
-        }
-        return out.isEmpty() ? null : out;
     }
 }
