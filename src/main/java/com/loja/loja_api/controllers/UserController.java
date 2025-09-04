@@ -1,9 +1,8 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.dto.PasswordChangeDto;
-import com.loja.loja_api.model.User;
-import com.loja.loja_api.model.ChangePasswordResult;
-import com.loja.loja_api.service.UserService;
+import com.loja.loja_api.dto.PasswordChangeDTO;
+import com.loja.loja_api.models.User;
+import com.loja.loja_api.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +32,7 @@ public class UserController {
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<?> changePassword(@RequestBody PasswordChangeDto passwordChangeDto) {
+    public ResponseEntity<?> changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
         var result = userService.changePassword(
                 passwordChangeDto.getCurrentPassword(),
                 passwordChangeDto.getNewPassword()

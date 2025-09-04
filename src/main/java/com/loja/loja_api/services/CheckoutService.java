@@ -1,9 +1,10 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
-import com.loja.loja_api.dto.CheckoutRequest;
+import com.loja.loja_api.dto.CheckoutRequestDTO;
+import com.loja.loja_api.dto.PaymentResponseDTO;
 import com.loja.loja_api.enums.OrderStatus;
 import com.loja.loja_api.enums.PaymentStatus;
-import com.loja.loja_api.model.*;
+import com.loja.loja_api.models.*;
 import com.loja.loja_api.repositories.CustomerRepository;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.PaymentRepository;
@@ -40,7 +41,7 @@ public class CheckoutService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Transactional
-    public PaymentResponse checkout(CheckoutRequest req) {
+    public PaymentResponseDTO checkout(CheckoutRequestDTO req) {
         // 1. Encontrar ou criar cliente
         Customer customer = customerRepo.findByEmail(req.getEmail())
                 .orElseGet(() -> {
@@ -66,7 +67,7 @@ public class CheckoutService {
                 .status(PaymentStatus.PENDING)
                 .build();
 
-        PaymentResponse response;
+        PaymentResponseDTO response;
 
         try {
             switch (req.getMethod()) {
@@ -80,7 +81,7 @@ public class CheckoutService {
             paymentRepo.save(payment);
             order.setStatus(OrderStatus.CANCELED);
             orderRepo.save(order);
-            return PaymentResponse.builder()
+            return PaymentResponseDTO.builder()
                     .status(PaymentStatus.DECLINED)
                     .message("Erro ao processar o pagamento: " + e.getMessage())
                     .build();
@@ -90,7 +91,7 @@ public class CheckoutService {
         return response;
     }
 
-    private Order mapToOrder(CheckoutRequest req, Customer customer) {
+    private Order mapToOrder(CheckoutRequestDTO req, Customer customer) {
         Order order = Order.builder()
                 .subtotal(req.getSubtotal())
                 .shipping(req.getShipping())
@@ -119,7 +120,7 @@ public class CheckoutService {
     // =============================
 // PAGAMENTO COM CARTÃO
 // =============================
-    private PaymentResponse processCardPayment(CheckoutRequest req, Payment payment, Order order) {
+    private PaymentResponseDTO processCardPayment(CheckoutRequestDTO req, Payment payment, Order order) {
         HttpHeaders headers = baseHeaders();
 
         JSONObject payer = new JSONObject();
@@ -161,7 +162,7 @@ public class CheckoutService {
 
                 orderRepo.save(order);
 
-                return PaymentResponse.builder()
+                return PaymentResponseDTO.builder()
                         .orderId(order.getId())
                         .status(newStatus)
                         .message(statusMessage(payment))
@@ -181,7 +182,7 @@ public class CheckoutService {
     // =============================
     // PIX
     // =============================
-    private PaymentResponse processPixPayment(CheckoutRequest req, Payment payment, Order order) {
+    private PaymentResponseDTO processPixPayment(CheckoutRequestDTO req, Payment payment, Order order) {
         try {
             HttpHeaders headers = baseHeaders();
 
@@ -229,7 +230,7 @@ public class CheckoutService {
                 payment.setQrCodeBase64(transactionData.optString("qr_code_base64", null));
                 payment.setStatus(PaymentStatus.PENDING);
 
-                return PaymentResponse.builder()
+                return PaymentResponseDTO.builder()
                         .orderId(order.getId())
                         .status(PaymentStatus.PENDING)
                         .qrCode(payment.getQrCode())
@@ -247,7 +248,7 @@ public class CheckoutService {
     // =============================
     // BOLETO
     // =============================
-    private PaymentResponse processBoletoPayment(CheckoutRequest req, Payment payment, Order order) {
+    private PaymentResponseDTO processBoletoPayment(CheckoutRequestDTO req, Payment payment, Order order) {
         HttpHeaders headers = baseHeaders();
 
         JSONObject body = new JSONObject();
@@ -303,7 +304,7 @@ public class CheckoutService {
 
                 orderRepo.save(order);
 
-                return PaymentResponse.builder()
+                return PaymentResponseDTO.builder()
                         .orderId(order.getId())
                         .status(newStatus)
                         .boletoUrl(boletoUrl)

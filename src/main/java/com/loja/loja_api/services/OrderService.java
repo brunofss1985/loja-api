@@ -1,8 +1,8 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
-import com.loja.loja_api.model.Customer;
-import com.loja.loja_api.model.Order;
-import com.loja.loja_api.model.OrderStatusHistory;
+import com.loja.loja_api.models.Customer;
+import com.loja.loja_api.models.Order;
+import com.loja.loja_api.models.OrderStatusHistory;
 import com.loja.loja_api.repositories.CustomerRepository;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.OrderStatusHistoryRepository;

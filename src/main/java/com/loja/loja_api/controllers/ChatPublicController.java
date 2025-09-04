@@ -2,7 +2,7 @@ package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.ChatRequestDTO;
 import com.loja.loja_api.dto.ChatResponseDTO;
-import com.loja.loja_api.service.ChatbotService;
+import com.loja.loja_api.services.ChatbotService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

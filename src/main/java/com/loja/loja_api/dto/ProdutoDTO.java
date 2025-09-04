@@ -1,6 +1,6 @@
 package com.loja.loja_api.dto;
 
-import com.loja.loja_api.model.Dimensoes;
+import com.loja.loja_api.models.Dimensoes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

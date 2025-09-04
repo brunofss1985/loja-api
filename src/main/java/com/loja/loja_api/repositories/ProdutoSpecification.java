@@ -1,6 +1,6 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.models.Produto;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;

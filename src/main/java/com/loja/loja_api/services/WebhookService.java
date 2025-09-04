@@ -1,9 +1,9 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
 import com.loja.loja_api.enums.OrderStatus;
 import com.loja.loja_api.enums.PaymentStatus;
-import com.loja.loja_api.model.Order;
-import com.loja.loja_api.model.Payment;
+import com.loja.loja_api.models.Order;
+import com.loja.loja_api.models.Payment;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
 
 @Service

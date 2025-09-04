@@ -1,6 +1,6 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.service.OrderService;
+import com.loja.loja_api.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

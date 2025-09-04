@@ -1,6 +1,6 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.service.ProductChatService;
+import com.loja.loja_api.services.ProductChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

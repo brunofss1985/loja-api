@@ -1,6 +1,6 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
-import com.loja.loja_api.dto.CountedItemDto;
+import com.loja.loja_api.dto.CountedItemDTO;
 import com.loja.loja_api.repositories.FiltroRepository;
 import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,17 +16,17 @@ public class FiltroService {
     private FiltroRepository filtroRepository;
 
     @Transactional(readOnly = true)
-    public List<CountedItemDto> listarMarcas() {
+    public List<CountedItemDTO> listarMarcas() {
         return filtroRepository.findDistinctMarcasWithCount();
     }
 
     @Transactional(readOnly = true)
-    public List<CountedItemDto> listarCategorias() {
+    public List<CountedItemDTO> listarCategorias() {
         return filtroRepository.findDistinctCategoriasWithCount();
     }
 
     @Transactional(readOnly = true)
-    public List<CountedItemDto> listarMarcasPorCategorias(List<String> categorias) {
+    public List<CountedItemDTO> listarMarcasPorCategorias(List<String> categorias) {
         List<String> norm = ListUtils.normalizeList(categorias);
         if (norm == null || norm.isEmpty()) {
             return listarMarcas();
@@ -35,7 +35,7 @@ public class FiltroService {
     }
 
     @Transactional(readOnly = true)
-    public List<CountedItemDto> listarCategoriasPorMarcas(List<String> marcas) {
+    public List<CountedItemDTO> listarCategoriasPorMarcas(List<String> marcas) {
         List<String> norm = ListUtils.normalizeList(marcas);
         if (norm == null || norm.isEmpty()) {
             return listarCategorias();
@@ -44,12 +44,12 @@ public class FiltroService {
     }
 
     @Transactional(readOnly = true)
-    public List<CountedItemDto> listarObjetivos() {
+    public List<CountedItemDTO> listarObjetivos() {
         return filtroRepository.findDistinctObjetivosWithCount();
     }
 
     @Transactional(readOnly = true)
-    public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
+    public List<CountedItemDTO> listarObjetivosPorCategorias(List<String> categorias) {
         List<String> norm = ListUtils.normalizeList(categorias);
         if (norm == null || norm.isEmpty()) {
             return listarObjetivos();

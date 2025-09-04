@@ -3,7 +3,7 @@ package com.loja.loja_api.controllers;
 import com.loja.loja_api.dto.LoginRequestDTO;
 import com.loja.loja_api.dto.RegisterRequestDTO;
 import com.loja.loja_api.dto.ResponseDTO;
-import com.loja.loja_api.service.AuthService;
+import com.loja.loja_api.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;

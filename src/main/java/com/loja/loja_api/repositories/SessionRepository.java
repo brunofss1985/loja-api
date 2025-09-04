@@ -1,6 +1,6 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.model.Session;
+import com.loja.loja_api.models.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

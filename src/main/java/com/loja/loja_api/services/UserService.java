@@ -1,7 +1,7 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
-import com.loja.loja_api.model.ChangePasswordResult;
-import com.loja.loja_api.model.User;
+import com.loja.loja_api.models.ChangePasswordResult;
+import com.loja.loja_api.models.User;
 import com.loja.loja_api.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;

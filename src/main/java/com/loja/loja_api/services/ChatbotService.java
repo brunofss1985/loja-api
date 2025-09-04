@@ -1,4 +1,4 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

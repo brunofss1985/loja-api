@@ -1,4 +1,4 @@
-package com.loja.loja_api.model;
+package com.loja.loja_api.models;
 
 import com.loja.loja_api.enums.UserType;
 import jakarta.persistence.*;

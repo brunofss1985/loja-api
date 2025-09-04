@@ -1,4 +1,4 @@
-package com.loja.loja_api.model;
+package com.loja.loja_api.dto;
 
 import com.loja.loja_api.enums.PaymentStatus;
 import lombok.Builder;
@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PaymentResponse {
+public class PaymentResponseDTO {
 
     private Long orderId;
     private Long paymentId;

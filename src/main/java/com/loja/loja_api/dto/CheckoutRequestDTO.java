@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-public class CheckoutRequest {
+public class CheckoutRequestDTO {
 
     // Dados pessoais
     @NotBlank

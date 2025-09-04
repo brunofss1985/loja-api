@@ -1,7 +1,7 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.model.Order;
-import com.loja.loja_api.model.Customer;
+import com.loja.loja_api.models.Order;
+import com.loja.loja_api.models.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

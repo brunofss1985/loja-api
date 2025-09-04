@@ -1,4 +1,4 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

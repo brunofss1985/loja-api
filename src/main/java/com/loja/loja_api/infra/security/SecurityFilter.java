@@ -1,7 +1,7 @@
 package com.loja.loja_api.infra.security;
 
-import com.loja.loja_api.model.Session;
-import com.loja.loja_api.model.User;
+import com.loja.loja_api.models.Session;
+import com.loja.loja_api.models.User;
 import com.loja.loja_api.repositories.SessionRepository;
 import com.loja.loja_api.repositories.UserRepository;
 import jakarta.servlet.FilterChain;

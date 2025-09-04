@@ -1,7 +1,7 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
-import com.loja.loja_api.model.Cart;
-import com.loja.loja_api.model.CartItem;
+import com.loja.loja_api.models.Cart;
+import com.loja.loja_api.models.CartItem;
 import com.loja.loja_api.repositories.CartRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

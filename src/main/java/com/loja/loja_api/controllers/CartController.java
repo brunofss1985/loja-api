@@ -1,7 +1,7 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.model.Cart;
-import com.loja.loja_api.service.CartService;
+import com.loja.loja_api.models.Cart;
+import com.loja.loja_api.services.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

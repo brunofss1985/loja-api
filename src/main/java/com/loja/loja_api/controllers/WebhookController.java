@@ -1,6 +1,6 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.service.WebhookService;
+import com.loja.loja_api.services.WebhookService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package com.loja.loja_api.model;
+package com.loja.loja_api.models;
 
 import com.loja.loja_api.enums.PaymentMethod;
 import com.loja.loja_api.enums.PaymentStatus;

@@ -1,6 +1,6 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
-import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification; // ✅ Importa a nova classe de Specification
 import org.springframework.beans.factory.annotation.Autowired;

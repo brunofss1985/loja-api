@@ -1,10 +1,10 @@
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.ProdutoDTO;
-import com.loja.loja_api.dto.CountedItemDto;
-import com.loja.loja_api.model.Produto;
-import com.loja.loja_api.service.FiltroService;
-import com.loja.loja_api.service.ProdutoService;
+import com.loja.loja_api.dto.CountedItemDTO;
+import com.loja.loja_api.models.Produto;
+import com.loja.loja_api.services.FiltroService;
+import com.loja.loja_api.services.ProdutoService;
 import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -76,17 +76,17 @@ public class ProdutoController {
     }
 
     @GetMapping("/marcas")
-    public ResponseEntity<List<CountedItemDto>> listarMarcas() {
+    public ResponseEntity<List<CountedItemDTO>> listarMarcas() {
         return ResponseEntity.ok(filtroService.listarMarcas());
     }
 
     @GetMapping("/categorias")
-    public ResponseEntity<List<CountedItemDto>> listarCategorias() {
+    public ResponseEntity<List<CountedItemDTO>> listarCategorias() {
         return ResponseEntity.ok(filtroService.listarCategorias());
     }
 
     @GetMapping("/marcas-por-categoria")
-    public ResponseEntity<List<CountedItemDto>> listarMarcasPorCategorias(
+    public ResponseEntity<List<CountedItemDTO>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
         List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
@@ -94,7 +94,7 @@ public class ProdutoController {
     }
 
     @GetMapping("/categorias-por-marca")
-    public ResponseEntity<List<CountedItemDto>> listarCategoriasPorMarcas(
+    public ResponseEntity<List<CountedItemDTO>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
         List<String> marcasNorm = ListUtils.normalizeList(marcas); // ✅ Usando a classe de utilitários
@@ -102,12 +102,12 @@ public class ProdutoController {
     }
 
     @GetMapping("/objetivos")
-    public ResponseEntity<List<CountedItemDto>> listarObjetivos() {
+    public ResponseEntity<List<CountedItemDTO>> listarObjetivos() {
         return ResponseEntity.ok(filtroService.listarObjetivos());
     }
 
     @GetMapping("/objetivos-por-categoria")
-    public ResponseEntity<List<CountedItemDto>> listarObjetivosPorCategorias(
+    public ResponseEntity<List<CountedItemDTO>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
         List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários

@@ -1,6 +1,6 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.models.Produto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

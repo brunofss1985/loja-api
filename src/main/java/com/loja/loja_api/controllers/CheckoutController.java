@@ -1,8 +1,8 @@
 package com.loja.loja_api.controllers;
 
-import com.loja.loja_api.dto.CheckoutRequest;
-import com.loja.loja_api.model.PaymentResponse;
-import com.loja.loja_api.service.CheckoutService;
+import com.loja.loja_api.dto.CheckoutRequestDTO;
+import com.loja.loja_api.dto.PaymentResponseDTO;
+import com.loja.loja_api.services.CheckoutService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +16,8 @@ public class CheckoutController {
     private final CheckoutService checkoutService;
 
     @PostMapping
-    public ResponseEntity<PaymentResponse> checkout(@Valid @RequestBody CheckoutRequest req) {
-        PaymentResponse resp = checkoutService.checkout(req);
+    public ResponseEntity<PaymentResponseDTO> checkout(@Valid @RequestBody CheckoutRequestDTO req) {
+        PaymentResponseDTO resp = checkoutService.checkout(req);
         return ResponseEntity.ok(resp);
     }
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CountedItemDto {
+public class CountedItemDTO {
     private String name;
     private Long count;
 }

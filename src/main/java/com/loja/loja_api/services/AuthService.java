@@ -1,11 +1,11 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
 import com.loja.loja_api.dto.LoginRequestDTO;
 import com.loja.loja_api.dto.RegisterRequestDTO;
 import com.loja.loja_api.dto.ResponseDTO;
 import com.loja.loja_api.infra.security.TokenService;
-import com.loja.loja_api.model.Session;
-import com.loja.loja_api.model.User;
+import com.loja.loja_api.models.Session;
+import com.loja.loja_api.models.User;
 import com.loja.loja_api.repositories.SessionRepository;
 import com.loja.loja_api.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;

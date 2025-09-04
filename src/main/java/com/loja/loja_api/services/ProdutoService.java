@@ -1,7 +1,7 @@
-package com.loja.loja_api.service;
+package com.loja.loja_api.services;
 
 import com.loja.loja_api.dto.ProdutoDTO;
-import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification;
 import com.loja.loja_api.util.ListUtils;
