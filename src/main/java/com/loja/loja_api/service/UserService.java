@@ -18,14 +18,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // ✅ Otimizado: Lógica para buscar o usuário logado de forma mais concisa.
+    // ✅ CORREÇÃO: Método getCurrentUser refatorado para ser mais robusto
     public Optional<User> getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal().equals("anonymousUser")) {
             return Optional.empty();
         }
-        var userDetails = (User) authentication.getPrincipal();
-        return userRepository.findById(userDetails.getId());
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof User) {
+            return Optional.of((User) principal);
+        } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            String userId = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            // Supondo que o seu ID é do tipo String
+            return userRepository.findById(userId);
+        }
+
+        return Optional.empty();
     }
 
     public ChangePasswordResult changePassword(String currentPassword, String newPassword) {
@@ -45,7 +55,6 @@ public class UserService {
         return ChangePasswordResult.success();
     }
 
-    // ✅ Mantido: Métodos simples de busca no repositório.
     public Optional<User> getById(String id) {
         return userRepository.findById(id);
     }
@@ -64,7 +73,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ✅ Refatorado: Lógica de atualização centralizada aqui.
     public Optional<User> updateUser(String id, User updatedUser) {
         return userRepository.findById(id).map(existing -> {
             existing.setName(updatedUser.getName());
@@ -81,7 +89,6 @@ public class UserService {
         });
     }
 
-    // ✅ Otimizado: Lógica de atualização de perfil simplificada.
     public Optional<User> updateOwnProfile(User updatedUser) {
         var currentUserOpt = getCurrentUser();
         if (currentUserOpt.isEmpty()) {

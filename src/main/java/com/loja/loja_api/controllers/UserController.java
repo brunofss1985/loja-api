@@ -65,7 +65,6 @@ public class UserController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
-        // ✅ O Controller agora apenas chama o Service e a lógica de negócio foi centralizada lá.
         return userService.updateUser(id, updatedUser)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
