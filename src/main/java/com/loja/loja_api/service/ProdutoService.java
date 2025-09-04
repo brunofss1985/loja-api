@@ -2,13 +2,16 @@ package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.repositories.FiltroRepository;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.dto.CountedItemDto;
+import com.loja.loja_api.repositories.ProdutoSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +25,10 @@ public class ProdutoService {
 
     @Autowired
     private ProdutoRepository repository;
+
+    // ✅ Injetando a nova dependência
+//    @Autowired
+//    private FiltroRepository filtroRepository;
 
     @Transactional(readOnly = true)
     public Page<Produto> listarTodosPaginado(int page, int size) {
@@ -50,7 +57,6 @@ public class ProdutoService {
         return repository.findByDestaqueAndAtivoTrue(pageable);
     }
 
-    // ✅ Parâmetros "objetivos" e "destaque" adicionados
     @Transactional(readOnly = true)
     public Page<Produto> buscarProdutosComFiltros(
             List<String> categorias,
@@ -78,121 +84,83 @@ public class ProdutoService {
         List<String> marcasFiltro = normalizeList(marcas);
         List<String> objetivosFiltro = normalizeList(objetivos);
 
-        boolean temCategorias = categoriasFiltro != null && !categoriasFiltro.isEmpty();
-        boolean temMarcas = marcasFiltro != null && !marcasFiltro.isEmpty();
-        boolean temObjetivos = objetivosFiltro != null && !objetivosFiltro.isEmpty();
-        boolean temDestaque = destaque != null;
+        Specification<Produto> spec = ProdutoSpecification.comFiltros(
+                categoriasFiltro,
+                marcasFiltro,
+                objetivosFiltro,
+                minPreco,
+                maxPreco,
+                destaque
+        );
 
-        // ✅ Lógica de if/else if com as novas combinações de campos
-        if (temCategorias && temMarcas && temObjetivos && temDestaque) {
-            return repository.findByCategoriasAndMarcasAndObjetivosAndDestaqueAndPrice(
-                    categoriasFiltro, marcasFiltro, objetivosFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temCategorias && temMarcas && temObjetivos) {
-            return repository.findByCategoriasAndMarcasAndObjetivosAndPrice(
-                    categoriasFiltro, marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
-        } else if (temCategorias && temMarcas && temDestaque) {
-            return repository.findByCategoriasAndMarcasAndDestaqueAndPrice(
-                    categoriasFiltro, marcasFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temCategorias && temObjetivos && temDestaque) {
-            return repository.findByCategoriasAndObjetivosAndDestaqueAndPrice(
-                    categoriasFiltro, objetivosFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temMarcas && temObjetivos && temDestaque) {
-            return repository.findByMarcasAndObjetivosAndDestaqueAndPrice(
-                    marcasFiltro, objetivosFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temCategorias && temMarcas) {
-            return repository.findByCategoriasAndMarcasAndPrice(
-                    categoriasFiltro, marcasFiltro, minPreco, maxPreco, pageable);
-        } else if (temCategorias && temObjetivos) {
-            return repository.findByCategoriasAndObjetivosAndPrice(
-                    categoriasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
-        } else if (temCategorias && temDestaque) {
-            return repository.findByCategoriasAndDestaqueAndPrice(
-                    categoriasFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temMarcas && temObjetivos) {
-            return repository.findByMarcasAndObjetivosAndPrice(
-                    marcasFiltro, objetivosFiltro, minPreco, maxPreco, pageable);
-        } else if (temMarcas && temDestaque) {
-            return repository.findByMarcasAndDestaqueAndPrice(
-                    marcasFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temObjetivos && temDestaque) {
-            return repository.findByObjetivosAndDestaqueAndPrice(
-                    objetivosFiltro, destaque, minPreco, maxPreco, pageable);
-        } else if (temCategorias) {
-            return repository.findByCategoriasAndPrice(
-                    categoriasFiltro, minPreco, maxPreco, pageable);
-        } else if (temMarcas) {
-            return repository.findByMarcasAndPrice(
-                    marcasFiltro, minPreco, maxPreco, pageable);
-        } else if (temObjetivos) {
-            return repository.findByObjetivosAndPrice(
-                    objetivosFiltro, minPreco, maxPreco, pageable);
-        } else if (temDestaque) {
-            return repository.findByDestaqueAndPrice(
-                    destaque, minPreco, maxPreco, pageable);
-        } else {
-            return repository.findByPriceRange(minPreco, maxPreco, pageable);
-        }
+        return repository.findAll(spec, pageable);
     }
-
-    @Transactional(readOnly = true)
-    public List<CountedItemDto> listarMarcas() {
-        return repository.findDistinctMarcasWithCount();
-    }
-
-    @Transactional(readOnly = true)
-    public List<CountedItemDto> listarCategorias() {
-        return repository.findDistinctCategoriasWithCount();
-    }
-
-    @Transactional(readOnly = true)
-    public List<CountedItemDto> listarMarcasPorCategorias(List<String> categorias) {
-        List<String> norm = normalizeList(categorias);
-        if (norm == null || norm.isEmpty()) {
-            return listarMarcas();
-        }
-        return repository.findDistinctMarcasByCategoriasWithCount(norm);
-    }
-
-    @Transactional(readOnly = true)
-    public List<CountedItemDto> listarCategoriasPorMarcas(List<String> marcas) {
-        List<String> norm = normalizeList(marcas);
-        if (norm == null || norm.isEmpty()) {
-            return listarCategorias();
-        }
-        return repository.findDistinctCategoriasByMarcasWithCount(norm);
-    }
-
-    // ✅ Novo método para listar objetivos
-    @Transactional(readOnly = true)
-    public List<CountedItemDto> listarObjetivos() {
-        return repository.findDistinctObjetivosWithCount();
-    }
-
-    // ✅ Novo método para listar objetivos por categoria
-    @Transactional(readOnly = true)
-    public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
-        List<String> norm = normalizeList(categorias);
-        if (norm == null || norm.isEmpty()) {
-            return listarObjetivos();
-        }
-        return repository.findDistinctObjetivosByCategoriasWithCount(norm);
-    }
-
-    @Transactional(readOnly = true)
-    public Long contarMarcas() {
-        return repository.countDistinctMarcas();
-    }
-
-    @Transactional(readOnly = true)
-    public Long contarCategorias() {
-        return repository.countDistinctCategorias();
-    }
-
-    // ✅ Novo método para contar objetivos
-    @Transactional(readOnly = true)
-    public Long contarObjetivos() {
-        return repository.countDistinctObjetivos();
-    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public List<CountedItemDto> listarMarcas() {
+//        return filtroRepository.findDistinctMarcasWithCount();
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public List<CountedItemDto> listarCategorias() {
+//        return filtroRepository.findDistinctCategoriasWithCount();
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public List<CountedItemDto> listarMarcasPorCategorias(List<String> categorias) {
+//        List<String> norm = normalizeList(categorias);
+//        if (norm == null || norm.isEmpty()) {
+//            return listarMarcas();
+//        }
+//        return filtroRepository.findDistinctMarcasByCategoriasWithCount(norm);
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public List<CountedItemDto> listarCategoriasPorMarcas(List<String> marcas) {
+//        List<String> norm = normalizeList(marcas);
+//        if (norm == null || norm.isEmpty()) {
+//            return listarCategorias();
+//        }
+//        return filtroRepository.findDistinctCategoriasByMarcasWithCount(norm);
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public List<CountedItemDto> listarObjetivos() {
+//        return filtroRepository.findDistinctObjetivosWithCount();
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
+//        List<String> norm = normalizeList(categorias);
+//        if (norm == null || norm.isEmpty()) {
+//            return listarObjetivos();
+//        }
+//        return filtroRepository.findDistinctObjetivosByCategoriasWithCount(norm);
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public Long contarMarcas() {
+//        return filtroRepository.countDistinctMarcas();
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public Long contarCategorias() {
+//        return filtroRepository.countDistinctCategorias();
+//    }
+//
+//    // ✅ Usando o novo filtroRepository
+//    @Transactional(readOnly = true)
+//    public Long contarObjetivos() {
+//        return filtroRepository.countDistinctObjetivos();
+//    }
 
     @Transactional(readOnly = true)
     public Produto buscarPorId(Long id) {
@@ -228,8 +196,8 @@ public class ProdutoService {
             existente.setLucroEstimado(dto.getLucroEstimado());
             existente.setStatusAprovacao(dto.getStatusAprovacao());
             existente.setAtivo(dto.getAtivo());
-            existente.setDestaque(dto.getDestaque()); // ✅ Adicionando destaque na atualização
-            existente.setObjetivos(dto.getObjetivos()); // ✅ Adicionando objetivos na atualização
+            existente.setDestaque(dto.getDestaque());
+            existente.setObjetivos(dto.getObjetivos());
             existente.setDisponibilidade(dto.getDisponibilidade());
             existente.setEstoque(dto.getEstoque());
             existente.setEstoqueMinimo(dto.getEstoqueMinimo());
@@ -318,7 +286,7 @@ public class ProdutoService {
                 .descricao(dto.getDescricao())
                 .descricaoCurta(dto.getDescricaoCurta())
                 .categorias(dto.getCategorias())
-                .objetivos(dto.getObjetivos()) // ✅ Adicionando objetivos na construção
+                .objetivos(dto.getObjetivos())
                 .peso(dto.getPeso())
                 .sabor(dto.getSabor())
                 .tamanhoPorcao(dto.getTamanhoPorcao())
@@ -330,7 +298,7 @@ public class ProdutoService {
                 .lucroEstimado(dto.getLucroEstimado())
                 .statusAprovacao(dto.getStatusAprovacao())
                 .ativo(dto.getAtivo())
-                .destaque(dto.getDestaque()) // ✅ Adicionando destaque na construção
+                .destaque(dto.getDestaque())
                 .disponibilidade(dto.getDisponibilidade())
                 .estoque(dto.getEstoque())
                 .estoqueMinimo(dto.getEstoqueMinimo())

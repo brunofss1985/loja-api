@@ -3,6 +3,7 @@ package com.loja.loja_api.controllers;
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.model.Produto;
+import com.loja.loja_api.service.FiltroService; // ✅ Importando o novo serviço
 import com.loja.loja_api.service.ProdutoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,10 @@ public class ProdutoController {
     @Autowired
     private ProdutoService service;
 
+    // ✅ Injetando o novo FiltroService
+    @Autowired
+    private FiltroService filtroService;
+
     @GetMapping
     public ResponseEntity<Page<Produto>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
@@ -30,7 +35,7 @@ public class ProdutoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) Boolean destaque // ✅ Novo parâmetro adicionado
+            @RequestParam(required = false) Boolean destaque
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
@@ -45,7 +50,7 @@ public class ProdutoController {
                 page,
                 size,
                 sort,
-                destaque // ✅ Passando o novo parâmetro para o serviço
+                destaque
         );
 
         return ResponseEntity.ok(produtos);
@@ -62,7 +67,7 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos);
     }
 
-    @GetMapping("/destaques") // ✅ Novo endpoint para buscar destaques
+    @GetMapping("/destaques")
     public ResponseEntity<Page<Produto>> buscarProdutosEmDestaque(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -73,12 +78,14 @@ public class ProdutoController {
 
     @GetMapping("/marcas")
     public ResponseEntity<List<CountedItemDto>> listarMarcas() {
-        return ResponseEntity.ok(service.listarMarcas());
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.listarMarcas());
     }
 
     @GetMapping("/categorias")
     public ResponseEntity<List<CountedItemDto>> listarCategorias() {
-        return ResponseEntity.ok(service.listarCategorias());
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.listarCategorias());
     }
 
     @GetMapping("/marcas-por-categoria")
@@ -86,7 +93,8 @@ public class ProdutoController {
             @RequestParam(required = false) List<String> categorias
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
-        return ResponseEntity.ok(service.listarMarcasPorCategorias(categoriasNorm));
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(categoriasNorm));
     }
 
     @GetMapping("/categorias-por-marca")
@@ -94,12 +102,14 @@ public class ProdutoController {
             @RequestParam(required = false) List<String> marcas
     ) {
         List<String> marcasNorm = normalizeCommaAndRepeatParams(marcas);
-        return ResponseEntity.ok(service.listarCategoriasPorMarcas(marcasNorm));
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(marcasNorm));
     }
 
     @GetMapping("/objetivos")
     public ResponseEntity<List<CountedItemDto>> listarObjetivos() {
-        return ResponseEntity.ok(service.listarObjetivos());
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.listarObjetivos());
     }
 
     @GetMapping("/objetivos-por-categoria")
@@ -107,22 +117,26 @@ public class ProdutoController {
             @RequestParam(required = false) List<String> categorias
     ) {
         List<String> categoriasNorm = normalizeCommaAndRepeatParams(categorias);
-        return ResponseEntity.ok(service.listarObjetivosPorCategorias(categoriasNorm));
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(categoriasNorm));
     }
 
     @GetMapping("/marcas/count")
     public ResponseEntity<Long> contarMarcas() {
-        return ResponseEntity.ok(service.contarMarcas());
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.contarMarcas());
     }
 
     @GetMapping("/categorias/count")
     public ResponseEntity<Long> contarCategorias() {
-        return ResponseEntity.ok(service.contarCategorias());
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.contarCategorias());
     }
 
     @GetMapping("/objetivos/count")
     public ResponseEntity<Long> contarObjetivos() {
-        return ResponseEntity.ok(service.contarObjetivos());
+        // ✅ Chamada agora para o novo filtroService
+        return ResponseEntity.ok(filtroService.contarObjetivos());
     }
 
     @GetMapping("/{id}")

@@ -2,7 +2,9 @@ package com.loja.loja_api.service;
 
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
+import com.loja.loja_api.repositories.ProdutoSpecification; // ✅ Importa a nova classe de Specification
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification; // ✅ Importa a interface Specification
 import org.springframework.stereotype.Service;
 
 import java.text.NumberFormat;
@@ -17,8 +19,9 @@ public class ProductChatService {
 
     public String getProductsForChatbot() {
         try {
-            // Busca produtos ativos (você pode precisar adicionar este método no repository)
-            List<Produto> produtos = produtoRepository.findByAtivoTrue();
+            // ✅ Substituindo a chamada findByAtivoTrue() por uma Specification
+            Specification<Produto> spec = ProdutoSpecification.comFiltros(null, null, null, null, null, null);
+            List<Produto> produtos = produtoRepository.findAll(spec);
 
             if (produtos.isEmpty()) {
                 return "PRODUTOS DISPONÍVEIS:\n- Nenhum produto ativo no momento. Entre em contato para mais informações.";
@@ -69,7 +72,9 @@ public class ProductChatService {
 
     public String getProductsByCategory(String categoria) {
         try {
-            List<Produto> produtos = produtoRepository.findByCategoriaIgnoreCaseAndAtivoTrue(categoria);
+            // ✅ Substituindo a chamada findByCategoriaIgnoreCaseAndAtivoTrue() por uma Specification
+            Specification<Produto> spec = ProdutoSpecification.comFiltros(List.of(categoria), null, null, null, null, null);
+            List<Produto> produtos = produtoRepository.findAll(spec);
 
             if (produtos.isEmpty()) {
                 return "Não encontramos produtos na categoria '" + categoria + "' no momento.";
@@ -110,12 +115,14 @@ public class ProductChatService {
     }
 
     public List<Produto> getAllActiveProducts() {
-        return produtoRepository.findByAtivoTrue();
+        // ✅ Substituindo a chamada findByAtivoTrue() por uma Specification
+        Specification<Produto> spec = ProdutoSpecification.comFiltros(null, null, null, null, null, null);
+        return produtoRepository.findAll(spec);
     }
 
     public Produto findProductByName(String name) {
-        List<Produto> produtos = produtoRepository.findByNomeContainingIgnoreCaseAndAtivoTrue(name);
+        // ✅ A busca por nome agora usa o método findByTermo que mantivemos no ProdutoRepository
+        List<Produto> produtos = produtoRepository.findByTermo(name, null).getContent();
         return produtos.isEmpty() ? null : produtos.get(0);
     }
 }
-
