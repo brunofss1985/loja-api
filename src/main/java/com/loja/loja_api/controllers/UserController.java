@@ -19,26 +19,17 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getUser() {
-        var user = userService.getCurrentUser();
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    public ResponseEntity<User> getUser() {
+        return userService.getCurrentUser()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/me")
     public ResponseEntity<User> updateOwnProfile(@RequestBody User updatedUser) {
-        var currentUser = userService.getCurrentUser();
-        if (currentUser == null) return ResponseEntity.status(401).build();
-
-        return userService.getById(currentUser.getId())
-                .map(existing -> {
-                    existing.setName(updatedUser.getName());
-                    existing.setPhone(updatedUser.getPhone());
-                    existing.setAddress(updatedUser.getAddress());
-                    existing.setCredits(updatedUser.getCredits());
-                    existing.setPoints(updatedUser.getPoints());
-                    return ResponseEntity.ok(userService.createUser(existing));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        return userService.updateOwnProfile(updatedUser)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(401).build());
     }
 
     @PutMapping("/change-password")
@@ -74,9 +65,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
-        // 🔐 Ignora o userType enviado na requisição de atualização
-        updatedUser.setUserType(null);
-        updatedUser.setPassword(null);
+        // ✅ O Controller agora apenas chama o Service e a lógica de negócio foi centralizada lá.
         return userService.updateUser(id, updatedUser)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

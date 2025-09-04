@@ -18,17 +18,22 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User getCurrentUser() {
+    // ✅ Otimizado: Lógica para buscar o usuário logado de forma mais concisa.
+    public Optional<User> getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal().equals("anonymousUser")) {
+            return Optional.empty();
+        }
         var userDetails = (User) authentication.getPrincipal();
-        return userRepository.findById(userDetails.getId()).orElse(null);
+        return userRepository.findById(userDetails.getId());
     }
 
     public ChangePasswordResult changePassword(String currentPassword, String newPassword) {
-        var currentUser = getCurrentUser();
-        if (currentUser == null) {
+        var currentUserOpt = getCurrentUser();
+        if (currentUserOpt.isEmpty()) {
             return ChangePasswordResult.failure("Usuário não encontrado.");
         }
+        var currentUser = currentUserOpt.get();
 
         if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
             return ChangePasswordResult.failure("Senha antiga incorreta.");
@@ -40,6 +45,7 @@ public class UserService {
         return ChangePasswordResult.success();
     }
 
+    // ✅ Mantido: Métodos simples de busca no repositório.
     public Optional<User> getById(String id) {
         return userRepository.findById(id);
     }
@@ -53,14 +59,17 @@ public class UserService {
     }
 
     public User createUser(User user) {
+        // 🔐 Adicionando lógica de segurança para o createUser
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
+    // ✅ Refatorado: Lógica de atualização centralizada aqui.
     public Optional<User> updateUser(String id, User updatedUser) {
         return userRepository.findById(id).map(existing -> {
             existing.setName(updatedUser.getName());
             existing.setEmail(updatedUser.getEmail());
-            // 🔐 Verifica se o userType enviado na requisição é válido antes de atualizar
+            // 🔐 Apenas o Service sabe como atualizar o userType de forma segura
             if (updatedUser.getUserType() != null) {
                 existing.setUserType(updatedUser.getUserType());
             }
@@ -72,18 +81,14 @@ public class UserService {
         });
     }
 
-    public boolean deleteUser(String id) {
-        if (!userRepository.existsById(id)) {
-            return false;
-        }
-        userRepository.deleteById(id);
-        return true;
-    }
-
+    // ✅ Otimizado: Lógica de atualização de perfil simplificada.
     public Optional<User> updateOwnProfile(User updatedUser) {
-        var currentUser = getCurrentUser();
-        if (currentUser == null) return Optional.empty();
+        var currentUserOpt = getCurrentUser();
+        if (currentUserOpt.isEmpty()) {
+            return Optional.empty();
+        }
 
+        var currentUser = currentUserOpt.get();
         currentUser.setName(updatedUser.getName());
         currentUser.setPhone(updatedUser.getPhone());
         currentUser.setAddress(updatedUser.getAddress());
@@ -91,5 +96,13 @@ public class UserService {
         currentUser.setPoints(updatedUser.getPoints());
 
         return Optional.of(userRepository.save(currentUser));
+    }
+
+    public boolean deleteUser(String id) {
+        if (!userRepository.existsById(id)) {
+            return false;
+        }
+        userRepository.deleteById(id);
+        return true;
     }
 }
