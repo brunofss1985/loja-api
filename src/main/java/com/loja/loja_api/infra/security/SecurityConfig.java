@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         // Permite acesso a rotas públicas
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/api/produtos").permitAll()
                         .requestMatchers("/api/produtos/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
