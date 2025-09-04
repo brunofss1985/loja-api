@@ -1,6 +1,5 @@
 package com.loja.loja_api.repositories;
 
-import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.model.Produto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,14 +10,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Repository
 @Transactional(readOnly = true)
 public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpecificationExecutor<Produto> {
 
 
-    // ✅ CORREÇÃO: Usando @Query para definir a consulta explicitamente
     @Query("SELECT p FROM Produto p WHERE p.destaque = true AND p.ativo = true")
     Page<Produto> findByDestaqueAndAtivoTrue(Pageable pageable);
 
@@ -33,5 +29,4 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpec
             "EXISTS (SELECT o FROM p.objetivos o WHERE LOWER(o) LIKE LOWER(CONCAT('%', :termo, '%'))))")
     Page<Produto> findByTermo(@Param("termo") String termo, Pageable pageable);
 
-    // ✅ NOTA: Os métodos de contagem e listagem de filtros foram removidos daqui.
 }

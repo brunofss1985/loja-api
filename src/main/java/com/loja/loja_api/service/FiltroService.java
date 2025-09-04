@@ -2,11 +2,11 @@ package com.loja.loja_api.service;
 
 import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.repositories.FiltroRepository;
+import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,7 +27,7 @@ public class FiltroService {
 
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarMarcasPorCategorias(List<String> categorias) {
-        List<String> norm = normalizeList(categorias);
+        List<String> norm = ListUtils.normalizeList(categorias);
         if (norm == null || norm.isEmpty()) {
             return listarMarcas();
         }
@@ -36,7 +36,7 @@ public class FiltroService {
 
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarCategoriasPorMarcas(List<String> marcas) {
-        List<String> norm = normalizeList(marcas);
+        List<String> norm = ListUtils.normalizeList(marcas);
         if (norm == null || norm.isEmpty()) {
             return listarCategorias();
         }
@@ -50,7 +50,7 @@ public class FiltroService {
 
     @Transactional(readOnly = true)
     public List<CountedItemDto> listarObjetivosPorCategorias(List<String> categorias) {
-        List<String> norm = normalizeList(categorias);
+        List<String> norm = ListUtils.normalizeList(categorias);
         if (norm == null || norm.isEmpty()) {
             return listarObjetivos();
         }
@@ -70,18 +70,5 @@ public class FiltroService {
     @Transactional(readOnly = true)
     public Long contarObjetivos() {
         return filtroRepository.countDistinctObjetivos();
-    }
-
-    private List<String> normalizeList(List<String> raw) {
-        if (raw == null || raw.isEmpty()) return null;
-        List<String> out = new ArrayList<>();
-        for (String s : raw) {
-            if (s == null) continue;
-            for (String p : s.split(",")) {
-                String t = p.trim();
-                if (!t.isEmpty()) out.add(t);
-            }
-        }
-        return out.isEmpty() ? null : out;
     }
 }

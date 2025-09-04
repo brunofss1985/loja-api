@@ -4,7 +4,7 @@ import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification;
-import com.loja.loja_api.util.ListUtils; // ✅ Importando a nova classe de utilitários
+import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -78,9 +76,9 @@ public class ProdutoService {
             pageable = PageRequest.of(page, size);
         }
 
-        List<String> categoriasFiltro = ListUtils.normalizeList(categorias); // ✅ Chamada corrigida
-        List<String> marcasFiltro = ListUtils.normalizeList(marcas);         // ✅ Chamada corrigida
-        List<String> objetivosFiltro = ListUtils.normalizeList(objetivos);   // ✅ Chamada corrigida
+        List<String> categoriasFiltro = ListUtils.normalizeList(categorias);
+        List<String> marcasFiltro = ListUtils.normalizeList(marcas);
+        List<String> objetivosFiltro = ListUtils.normalizeList(objetivos);
 
         Specification<Produto> spec = ProdutoSpecification.comFiltros(
                 categoriasFiltro,

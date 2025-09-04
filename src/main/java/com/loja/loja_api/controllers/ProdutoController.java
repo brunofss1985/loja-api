@@ -5,7 +5,7 @@ import com.loja.loja_api.dto.CountedItemDto;
 import com.loja.loja_api.model.Produto;
 import com.loja.loja_api.service.FiltroService;
 import com.loja.loja_api.service.ProdutoService;
-import com.loja.loja_api.util.ListUtils; // ✅ Importando a classe de utilitários
+import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-// ✅ Usando o nome completo para evitar o conflito
 @Repository
 public interface FiltroRepository extends org.springframework.data.repository.Repository<Produto, Long> {
 
