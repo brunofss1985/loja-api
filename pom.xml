@@ -6,8 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.4.3</version>
-        <relativePath/> <!-- lookup parent from repository -->
-    </parent>
+        <relativePath/> </parent>
     <groupId>com.loja</groupId>
     <artifactId>loja-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -46,12 +45,10 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Driver do PostgreSQL - Atualize para a versão mais recente -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.5.0</version> <!-- Atualize a versão para a mais recente -->
-        </dependency>
+            <version>42.5.0</version> </dependency>
 
         <dependency>
             <groupId>com.auth0</groupId>
@@ -64,28 +61,27 @@
             <version>3.4.3</version>
         </dependency>
 
-            <dependency>
-                <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional>
-            </dependency>
-            <!-- Para gerar QR Code Pix (mock/local) -->
-            <dependency>
-                <groupId>com.google.zxing</groupId><artifactId>core</artifactId><version>3.5.3</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.zxing</groupId><artifactId>javase</artifactId><version>3.5.3</version>
-            </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId><artifactId>core</artifactId><version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId><artifactId>javase</artifactId><version>3.5.3</version>
+        </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
@@ -102,6 +98,26 @@
             <version>20240303</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>1.32.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.oauth-client</groupId>
+            <artifactId>google-oauth-client-jetty</artifactId>
+            <version>1.32.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-jackson2</artifactId>
+            <version>1.39.2</version>
+        </dependency>
     </dependencies>
 
     <build>

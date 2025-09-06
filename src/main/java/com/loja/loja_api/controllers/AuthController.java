@@ -3,6 +3,7 @@ package com.loja.loja_api.controllers;
 import com.loja.loja_api.dto.LoginRequestDTO;
 import com.loja.loja_api.dto.RegisterRequestDTO;
 import com.loja.loja_api.dto.ResponseDTO;
+import com.loja.loja_api.dto.GoogleLoginRequestDTO; // Importe o novo DTO
 import com.loja.loja_api.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,17 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO body) {
         try {
             ResponseDTO response = authService.login(body);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    // Novo endpoint para login com o Google
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleLogin(@RequestBody GoogleLoginRequestDTO body) {
+        try {
+            ResponseDTO response = authService.googleLogin(body.token());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());

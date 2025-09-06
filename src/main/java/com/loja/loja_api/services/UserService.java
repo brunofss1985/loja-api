@@ -18,7 +18,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // ✅ CORREÇÃO: Método getCurrentUser refatorado para ser mais robusto
     public Optional<User> getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal().equals("anonymousUser")) {
@@ -31,7 +30,6 @@ public class UserService {
             return Optional.of((User) principal);
         } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
             String userId = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
-            // Supondo que o seu ID é do tipo String
             return userRepository.findById(userId);
         }
 
@@ -55,6 +53,28 @@ public class UserService {
         return ChangePasswordResult.success();
     }
 
+    // 🎯 Novo método para definir a senha do usuário
+    public ChangePasswordResult setPassword(String newPassword) {
+        var currentUserOpt = getCurrentUser();
+        if (currentUserOpt.isEmpty()) {
+            return ChangePasswordResult.failure("Usuário não encontrado.");
+        }
+        var currentUser = currentUserOpt.get();
+
+        if (currentUser.getPassword() != null && !currentUser.getPassword().isEmpty()) {
+            return ChangePasswordResult.failure("A senha já foi definida. Por favor, use a opção de 'trocar senha'.");
+        }
+
+        if (newPassword == null || newPassword.length() < 6) {
+            return ChangePasswordResult.failure("A nova senha deve ter pelo menos 6 caracteres.");
+        }
+
+        currentUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(currentUser);
+
+        return ChangePasswordResult.success();
+    }
+
     public Optional<User> getById(String id) {
         return userRepository.findById(id);
     }
@@ -68,7 +88,6 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        // 🔐 Adicionando lógica de segurança para o createUser
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
@@ -77,7 +96,6 @@ public class UserService {
         return userRepository.findById(id).map(existing -> {
             existing.setName(updatedUser.getName());
             existing.setEmail(updatedUser.getEmail());
-            // 🔐 Apenas o Service sabe como atualizar o userType de forma segura
             if (updatedUser.getUserType() != null) {
                 existing.setUserType(updatedUser.getUserType());
             }

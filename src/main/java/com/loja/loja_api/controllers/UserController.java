@@ -1,6 +1,7 @@
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.PasswordChangeDTO;
+import com.loja.loja_api.dto.SetPasswordDTO; // Importe o novo DTO
 import com.loja.loja_api.models.User;
 import com.loja.loja_api.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,15 @@ public class UserController {
                 passwordChangeDto.getCurrentPassword(),
                 passwordChangeDto.getNewPassword()
         );
+        return result.isSuccess()
+                ? ResponseEntity.ok().build()
+                : ResponseEntity.badRequest().body(result.getMessage());
+    }
+
+    // 🎯 Novo endpoint para criar a senha
+    @PutMapping("/set-password")
+    public ResponseEntity<?> setPassword(@RequestBody SetPasswordDTO setPasswordDTO) {
+        var result = userService.setPassword(setPasswordDTO.getNewPassword());
         return result.isSuccess()
                 ? ResponseEntity.ok().build()
                 : ResponseEntity.badRequest().body(result.getMessage());
