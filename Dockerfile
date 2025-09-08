@@ -12,8 +12,6 @@ COPY src ./src
 # Executa o comando de build para criar o JAR executável.
 RUN ./mvnw clean package -DskipTests
 
----
-
 # Estágio 2: Runtime com JRE
 # Usa uma imagem mais leve com apenas o JRE 17 para rodar a aplicação.
 FROM eclipse-temurin:17-jre-alpine
