@@ -8,8 +8,22 @@ services:
       - key: JAVA_VERSION
         value: 17
       - key: spring.datasource.url
-        value: '{{ env.DATABASE_URL }}'
+        value: '{{ env.DB_URL }}'
       - key: spring.datasource.username
-        value: '{{ env.DATABASE_USER }}'
+        value: '{{ env.DB_USER }}'
       - key: spring.datasource.password
-        value: '{{ env.DATABASE_PASSWORD }}'
+        value: '{{ env.DB_PASSWORD }}'
+      - key: API_SECRET
+        value: '{{ env.API_SECRET }}'
+      - key: MP_ACCESS_TOKEN
+        value: '{{ env.MP_ACCESS_TOKEN }}'
+      - key: MP_TOKEN
+        value: '{{ env.MP_TOKEN }}'
+      - key: MP_CLIENT_ID
+        value: '{{ env.MP_CLIENT_ID }}'
+      - key: MP_CLIENT_SECRET
+        value: '{{ env.MP_CLIENT_SECRET }}'
+      - key: MP_NOTIFICATION_URL
+        value: '{{ env.MP_NOTIFICATION_URL }}'
+      - key: GOOGLE_CLIENT_ID
+        value: '{{ env.GOOGLE_CLIENT_ID }}'
