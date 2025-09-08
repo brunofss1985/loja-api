@@ -4,16 +4,9 @@ services:
     runtime: docker
     rootDir: .
     buildCommand: "./mvnw clean install -DskipTests"
-    startCommand: "java -Xms256m -Xmx512m -jar app.jar"
     envVars:
       - key: JAVA_VERSION
         value: 17
-      - key: spring.datasource.url
-        value: '{{ env.DB_URL }}'
-      - key: spring.datasource.username
-        value: '{{ env.DB_USER }}'
-      - key: spring.datasource.password
-        value: '{{ env.DB_PASSWORD }}'
       - key: API_SECRET
         value: '{{ env.API_SECRET }}'
       - key: MP_ACCESS_TOKEN
