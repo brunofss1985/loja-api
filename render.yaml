@@ -4,6 +4,7 @@ services:
     runtime: docker
     rootDir: .
     buildCommand: "./mvnw clean install -DskipTests"
+    startCommand: "java -Xms128m -Xmx256m -jar app.jar"
     envVars:
       - key: JAVA_VERSION
         value: 17
@@ -27,3 +28,5 @@ services:
         value: '{{ env.MP_NOTIFICATION_URL }}'
       - key: GOOGLE_CLIENT_ID
         value: '{{ env.GOOGLE_CLIENT_ID }}'
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
