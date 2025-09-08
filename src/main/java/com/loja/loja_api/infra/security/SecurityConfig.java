@@ -2,7 +2,6 @@ package com.loja.loja_api.infra.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -34,20 +33,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Acesso público
-                        .requestMatchers(HttpMethod.GET, "/api/produtos", "/api/produtos/**").permitAll()
-                        .requestMatchers("/auth/**", "/checkout/**", "/public/**", "/chatbot/**", "/webhooks/**").permitAll()
+                        // Permite acesso a rotas públicas
                         .requestMatchers("/").permitAll()
-
-                        // Acesso restrito para ADMIN
-                        .requestMatchers(HttpMethod.POST, "/api/produtos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/produtos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/produtos/**").hasRole("ADMIN")
-
-                        // Rota autenticada
+                        .requestMatchers("/api/produtos").permitAll()
+                        .requestMatchers("/api/produtos/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/checkout", "/checkout/**").permitAll()
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/chatbot/**").permitAll()
+                        .requestMatchers("/webhooks/**").permitAll()
+                        // 🆕 A rota de alteração de senha deve estar autenticada
                         .requestMatchers("/api/user/change-password").authenticated()
-
-                        // Qualquer outra rota exige autenticação
+                        // Rotas que exigem autenticação
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
@@ -66,7 +63,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(false); // ou true se estiver usando cookies/autenticação
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
