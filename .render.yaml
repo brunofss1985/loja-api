@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: loja-api
+    env: java
+    rootDir: .
+    buildCommand: "./mvnw clean install -DskipTests"
+    startCommand: "java -jar target/loja-api-0.0.1-SNAPSHOT.jar"
+    envVars:
+      - key: JAVA_VERSION
+        value: 17
+      - key: spring.datasource.url
+        value: '{{ env.DATABASE_URL }}'
+      - key: spring.datasource.username
+        value: '{{ env.DATABASE_USER }}'
+      - key: spring.datasource.password
+        value: '{{ env.DATABASE_PASSWORD }}'
