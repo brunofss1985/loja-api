@@ -1,24 +1,23 @@
-# Estágio 1: Build com Maven
-# Usa uma imagem com Maven e o JDK 17 para compilar o projeto.
+# Etapa 1: Build com Maven
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
-# Copia o pom.xml e os arquivos de configuração do Maven para aproveitar o cache do Docker.
-COPY pom.xml .
+
+# Copia os arquivos necessários para o Maven Wrapper funcionar
+COPY mvnw .
 COPY .mvn .mvn
-# Baixa as dependências do Maven.
-RUN mvnw dependency:go-offline
-# Copia o resto do código fonte.
+COPY pom.xml .
+
+# Dá permissão de execução ao mvnw
+RUN chmod +x mvnw
+
+# Baixa dependências e compila
+RUN ./mvnw dependency:go-offline
 COPY src ./src
-# Executa o comando de build para criar o JAR executável.
 RUN ./mvnw clean package -DskipTests
 
-# Estágio 2: Runtime com JRE
-# Usa uma imagem mais leve com apenas o JRE 17 para rodar a aplicação.
+# Etapa 2: Runtime com JRE
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-# Copia o JAR do estágio de build.
-COPY --from=build /app/target/*.jar app.jar
-# Expõe a porta que sua aplicação utiliza.
+COPY --from=build /app/target/loja-api-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-# Define o comando de entrada que executa o JAR com o perfil de produção.
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
