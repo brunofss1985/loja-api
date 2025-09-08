@@ -1,9 +1,9 @@
 services:
   - type: web
     name: loja-api
-    env: java
+    runtime: java
     rootDir: .
-    buildCommand: "echo $JAVA_HOME && ./mvnw clean install -DskipTests"
+    buildCommand: "./mvnw clean install -DskipTests"
     startCommand: "java -jar target/loja-api-0.0.1-SNAPSHOT.jar"
     envVars:
       - key: JAVA_VERSION
