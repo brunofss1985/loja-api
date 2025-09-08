@@ -1,7 +1,7 @@
 services:
   - type: web
     name: loja-api
-    runtime: java
+    runtime: docker
     rootDir: .
     buildCommand: "./mvnw clean install -DskipTests"
     startCommand: "java -jar target/loja-api-0.0.1-SNAPSHOT.jar"
