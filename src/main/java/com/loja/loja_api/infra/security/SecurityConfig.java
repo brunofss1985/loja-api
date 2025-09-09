@@ -2,6 +2,7 @@ package com.loja.loja_api.infra.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,10 +30,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // desativa CSRF (API REST)
                 .csrf(AbstractHttpConfigurer::disable)
+                // habilita CORS com a fonte abaixo
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 Rotas públicas
+                        // permitir preflight globally
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // rotas públicas (raiz, produtos, auth, checkout, public, chatbot, webhooks)
                         .requestMatchers("/",
                                 "/api/produtos", "/api/produtos/**",
                                 "/auth/**",
@@ -40,11 +46,14 @@ public class SecurityConfig {
                                 "/public/**",
                                 "/chatbot/**",
                                 "/webhooks/**").permitAll()
-                        // 🔒 Exemplo de rota que precisa de login
+
+                        // rota autenticada específica
                         .requestMatchers("/api/user/change-password").authenticated()
-                        // 🔒 Qualquer outra precisa de login
+
+                        // resto precisa estar autenticado
                         .anyRequest().authenticated()
                 )
+                // nosso filtro customizado antes do UsernamePasswordAuthenticationFilter
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -59,23 +68,26 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ Origens permitidas (dev + prod)
+        // Origens (dev + prod)
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://lojabr.netlify.app",
                 "http://localhost:4200"
         ));
 
-        // ✅ Métodos
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // Métodos permitidos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
 
-        // ✅ Headers
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
+        // Permite qualquer header vindo do front (inclui Authorization)
+        configuration.setAllowedHeaders(List.of("*"));
+
+        // Cabeçalhos expostos ao front (se precisar ler)
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
 
-        // ✅ Para permitir cookies/tokens
+        // Necessário se front envia cookies ou Authorization com credentials
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // aplica para todas as rotas
         source.registerCorsConfiguration("/**", configuration);
 
         return source;

@@ -32,6 +32,37 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Autowired
     private SessionRepository sessionRepository;
 
+    /**
+     * Evita que o filtro seja executado para rotas públicas / OPTIONS / assets, etc.
+     * Quando true, doFilterInternal NÃO será chamado.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String method = request.getMethod();
+        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+        String uri = request.getRequestURI();
+        String path = uri.substring(contextPath.length());
+
+        // Sempre ignorar préflight
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
+
+        // Rotas públicas: cobre /api/produtos (com ou sem query string), subpaths e outras rotas públicas
+        if (path.equals("/") ||
+                path.startsWith("/api/produtos") ||
+                path.startsWith("/auth") ||
+                path.startsWith("/checkout") ||
+                path.startsWith("/public") ||
+                path.startsWith("/chatbot") ||
+                path.startsWith("/webhooks")) {
+            return true;
+        }
+
+        // Caso contrário, não ignora (ou seja, aplica o filtro)
+        return false;
+    }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -39,54 +70,56 @@ public class SecurityFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        String token = recoverToken(request);
 
-        // 🔓 Ignorar rotas públicas
-        if (isPublicRoute(path)) {
+        if (token == null) {
+            // Sem token: apenas segue (rotas protegidas serão negadas pelo Spring Security mais adiante)
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = recoverToken(request);
-
-        if (token != null) {
-            try {
-                String email = tokenService.validateToken(token);
-                if (email == null) {
-                    throw new RuntimeException("Token JWT inválido ou expirado.");
-                }
-
-                Optional<Session> sessionOpt = sessionRepository.findByJwtTokenAndActiveTrue(token);
-                if (sessionOpt.isEmpty()) {
-                    throw new RuntimeException("Sessão não encontrada ou inativa.");
-                }
-
-                Session session = sessionOpt.get();
-                if (session.getLastActivity().isBefore(LocalDateTime.now().minusMinutes(30))) {
-                    session.setActive(false);
-                    sessionRepository.save(session);
-                    throw new RuntimeException("Sessão expirada por inatividade.");
-                }
-
-                session.setLastActivity(LocalDateTime.now());
-                sessionRepository.save(session);
-
-                User user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
-
-                String role = "ROLE_" + user.getUserType().name();
-                var authorities = List.of(new SimpleGrantedAuthority(role));
-
-                var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            } catch (Exception e) {
-                SecurityContextHolder.clearContext();
-                System.err.println("❌ Falha na autenticação do token: " + e.getMessage());
+        try {
+            String email = tokenService.validateToken(token);
+            if (email == null) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token JWT inválido ou expirado.");
+                return;
             }
-        }
 
-        filterChain.doFilter(request, response);
+            Optional<Session> sessionOpt = sessionRepository.findByJwtTokenAndActiveTrue(token);
+            if (sessionOpt.isEmpty()) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Sessão não encontrada ou inativa.");
+                return;
+            }
+
+            Session session = sessionOpt.get();
+            if (session.getLastActivity().isBefore(LocalDateTime.now().minusMinutes(30))) {
+                session.setActive(false);
+                sessionRepository.save(session);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Sessão expirada por inatividade.");
+                return;
+            }
+
+            // atualizar last activity
+            session.setLastActivity(LocalDateTime.now());
+            sessionRepository.save(session);
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+
+            String role = "ROLE_" + user.getUserType().name();
+            var authorities = List.of(new SimpleGrantedAuthority(role));
+
+            var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // segue com a requisição autenticada
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
+            // Em caso de erro inesperado, retornar 401 com mensagem para facilitar debug
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Falha na autenticação do token: " + e.getMessage());
+        }
     }
 
     private String recoverToken(HttpServletRequest request) {
@@ -94,15 +127,5 @@ public class SecurityFilter extends OncePerRequestFilter {
         return (authHeader != null && authHeader.startsWith("Bearer "))
                 ? authHeader.substring(7)
                 : null;
-    }
-
-    private boolean isPublicRoute(String path) {
-        return path.startsWith("/api/produtos")   // ✅ cobre raiz + subpaths
-                || path.startsWith("/auth")
-                || path.startsWith("/checkout")
-                || path.startsWith("/public")
-                || path.startsWith("/chatbot")
-                || path.startsWith("/webhooks")
-                || path.equals("/");
     }
 }
