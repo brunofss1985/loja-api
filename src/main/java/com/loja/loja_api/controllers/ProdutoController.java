@@ -36,14 +36,12 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
-        List<String> marcasNorm = ListUtils.normalizeList(marcas);
-        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);
-
         Page<Produto> produtos = service.buscarProdutosComFiltros(
-                categoriasNorm, marcasNorm, objetivosNorm, minPreco, maxPreco, page, size, sort, destaque
+                ListUtils.normalizeList(categorias),
+                ListUtils.normalizeList(marcas),
+                ListUtils.normalizeList(objetivos),
+                minPreco, maxPreco, page, size, sort, destaque
         );
-
         return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
@@ -67,6 +65,40 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
+        Produto produto = service.buscarPorId(id);
+        return ResponseEntity.ok(ProdutoDTO.fromEntity(produto));
+    }
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<ProdutoDTO> criar(
+            @RequestPart("produto") ProdutoDTO dto,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
+            @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria
+    ) {
+        Produto produto = service.salvar(dto, imagem, galeria);
+        return ResponseEntity.ok(ProdutoDTO.fromEntity(produto));
+    }
+
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ProdutoDTO> atualizar(
+            @PathVariable Long id,
+            @RequestPart("produto") ProdutoDTO dto,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
+            @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria
+    ) {
+        Produto produto = service.atualizar(id, dto, imagem, galeria);
+        return ResponseEntity.ok(ProdutoDTO.fromEntity(produto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        service.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Métodos auxiliares
     @GetMapping("/marcas")
     public ResponseEntity<List<CountedItemDTO>> listarMarcas() {
         return ResponseEntity.ok(filtroService.listarMarcas());
@@ -77,33 +109,30 @@ public class ProdutoController {
         return ResponseEntity.ok(filtroService.listarCategorias());
     }
 
+    @GetMapping("/objetivos")
+    public ResponseEntity<List<CountedItemDTO>> listarObjetivos() {
+        return ResponseEntity.ok(filtroService.listarObjetivos());
+    }
+
     @GetMapping("/marcas-por-categoria")
     public ResponseEntity<List<CountedItemDTO>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
-        return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(categoriasNorm));
+        return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(ListUtils.normalizeList(categorias)));
     }
 
     @GetMapping("/categorias-por-marca")
     public ResponseEntity<List<CountedItemDTO>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
-        List<String> marcasNorm = ListUtils.normalizeList(marcas);
-        return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(marcasNorm));
-    }
-
-    @GetMapping("/objetivos")
-    public ResponseEntity<List<CountedItemDTO>> listarObjetivos() {
-        return ResponseEntity.ok(filtroService.listarObjetivos());
+        return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(ListUtils.normalizeList(marcas)));
     }
 
     @GetMapping("/objetivos-por-categoria")
     public ResponseEntity<List<CountedItemDTO>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
-        return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(categoriasNorm));
+        return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(ListUtils.normalizeList(categorias)));
     }
 
     @GetMapping("/marcas/count")
@@ -119,36 +148,5 @@ public class ProdutoController {
     @GetMapping("/objetivos/count")
     public ResponseEntity<Long> contarObjetivos() {
         return ResponseEntity.ok(filtroService.contarObjetivos());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
-        Produto produto = service.buscarPorId(id);
-        return ResponseEntity.ok(ProdutoDTO.fromEntity(produto));
-    }
-
-    @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<Produto> criar(
-            @RequestPart("produto") ProdutoDTO dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
-            @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria
-    ) {
-        return ResponseEntity.ok(service.salvar(dto, imagem, galeria));
-    }
-
-    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
-    public ResponseEntity<Produto> atualizar(
-            @PathVariable Long id,
-            @RequestPart("produto") ProdutoDTO dto,
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
-            @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria
-    ) {
-        return ResponseEntity.ok(service.atualizar(id, dto, imagem, galeria));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        service.deletar(id);
-        return ResponseEntity.noContent().build();
     }
 }
