@@ -1,14 +1,12 @@
 package com.loja.loja_api.services;
 
 import com.loja.loja_api.dto.ProdutoDTO;
-import com.loja.loja_api.dto.ProdutoResponseDTO;
 import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification;
 import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProdutoService {
@@ -30,30 +27,34 @@ public class ProdutoService {
     private ImagemService imagemService;
 
     @Transactional(readOnly = true)
-    public Page<ProdutoResponseDTO> listarTodosPaginadoDto(int page, int size) {
+    public Page<Produto> listarTodosPaginado(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Produto> produtos = repository.findAll(pageable);
-        // conversão dentro da transação -> evita LazyInitializationException
-        Page<ProdutoResponseDTO> dtos = produtos.map(ProdutoResponseDTO::fromEntity);
-        return dtos;
+        return repository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<ProdutoResponseDTO> buscarPorTermo(String termo, int page, int size, String sort) {
-        Pageable pageable = buildPageable(page, size, sort);
-        Page<Produto> produtos = repository.findByTermo(termo, pageable);
-        return produtos.map(ProdutoResponseDTO::fromEntity);
+    public Page<Produto> buscarPorTermo(String termo, int page, int size, String sort) {
+        Pageable pageable;
+        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
+            String[] sortParams = sort.split(",");
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
+                    Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sortedBy = Sort.by(direction, sortParams[0]);
+            pageable = PageRequest.of(page, size, sortedBy);
+        } else {
+            pageable = PageRequest.of(page, size);
+        }
+        return repository.findByTermo(termo, pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<ProdutoResponseDTO> buscarProdutosEmDestaque(int page, int size) {
+    public Page<Produto> buscarProdutosEmDestaque(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Produto> produtos = repository.findByDestaqueAndAtivoTrue(pageable);
-        return produtos.map(ProdutoResponseDTO::fromEntity);
+        return repository.findByDestaqueAndAtivoTrue(pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<ProdutoResponseDTO> buscarProdutosComFiltros(
+    public Page<Produto> buscarProdutosComFiltros(
             List<String> categorias,
             List<String> marcas,
             List<String> objetivos,
@@ -64,7 +65,16 @@ public class ProdutoService {
             String sort,
             Boolean destaque
     ) {
-        Pageable pageable = buildPageable(page, size, sort);
+        Pageable pageable;
+        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
+            String[] sortParams = sort.split(",");
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
+                    Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sortedBy = Sort.by(direction, sortParams[0]);
+            pageable = PageRequest.of(page, size, sortedBy);
+        } else {
+            pageable = PageRequest.of(page, size);
+        }
 
         List<String> categoriasFiltro = ListUtils.normalizeList(categorias);
         List<String> marcasFiltro = ListUtils.normalizeList(marcas);
@@ -79,29 +89,13 @@ public class ProdutoService {
                 destaque
         );
 
-        Page<Produto> produtos = repository.findAll(spec, pageable);
-        // conversão dentro da transação
-        return produtos.map(ProdutoResponseDTO::fromEntity);
+        return repository.findAll(spec, pageable);
     }
 
-    /**
-     * Retorna a entidade Produto (usado para endpoints de imagem e também para atualização).
-     * Mantém a assinatura original para não quebrar upload/update.
-     */
     @Transactional(readOnly = true)
-    public Produto buscarPorIdEntity(Long id) {
+    public Produto buscarPorId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-    }
-
-    /**
-     * Retorna DTO (usado pelo controller para GET /{id}).
-     */
-    @Transactional(readOnly = true)
-    public ProdutoResponseDTO buscarPorId(Long id) {
-        Produto produto = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-        return ProdutoResponseDTO.fromEntity(produto);
     }
 
     @Transactional
@@ -158,7 +152,7 @@ public class ProdutoService {
 
     @Transactional
     public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        Produto existente = buscarPorIdEntity(id);
+        Produto existente = buscarPorId(id);
 
         try {
             existente.setNome(dto.getNome());
@@ -220,29 +214,7 @@ public class ProdutoService {
 
     @Transactional
     public void deletar(Long id) {
-        Produto produto = buscarPorIdEntity(id);
+        Produto produto = buscarPorId(id);
         repository.delete(produto);
-    }
-
-    /**
-     * Constrói o Pageable com validação para evitar ordenar por campos inválidos.
-     */
-    private Pageable buildPageable(int page, int size, String sort) {
-        if (sort == null || sort.equalsIgnoreCase("relevance")) {
-            return PageRequest.of(page, size);
-        }
-
-        try {
-            String[] sortParams = sort.split(",");
-            String field = sortParams[0];
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc")
-                    ? Sort.Direction.DESC
-                    : Sort.Direction.ASC;
-
-            return PageRequest.of(page, size, Sort.by(direction, field));
-        } catch (Exception e) {
-            // fallback para evitar erro em produção
-            return PageRequest.of(page, size);
-        }
     }
 }
