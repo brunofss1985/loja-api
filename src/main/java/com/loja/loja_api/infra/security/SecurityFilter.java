@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -32,34 +33,35 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Autowired
     private SessionRepository sessionRepository;
 
-    /**
-     * Evita que o filtro seja executado para rotas públicas / OPTIONS / assets, etc.
-     * Quando true, doFilterInternal NÃO será chamado.
-     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String method = request.getMethod();
-        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
-        String uri = request.getRequestURI();
-        String path = uri.substring(contextPath.length());
 
-        // Sempre ignorar préflight
+        // Ignora préflight
         if ("OPTIONS".equalsIgnoreCase(method)) {
             return true;
         }
 
-        // Rotas públicas: cobre /api/produtos (com ou sem query string), subpaths e outras rotas públicas
-        if (path.equals("/") ||
-                path.startsWith("/api/produtos") ||
-                path.startsWith("/auth") ||
-                path.startsWith("/checkout") ||
-                path.startsWith("/public") ||
-                path.startsWith("/chatbot") ||
-                path.startsWith("/webhooks")) {
-            return true;
+        // Lista de caminhos públicos com suporte a wildcards
+        List<String> publicPaths = List.of(
+                "/",
+                "/auth/**",
+                "/api/produtos",
+                "/api/produtos/**",
+                "/checkout/**",
+                "/public/**",
+                "/chatbot/**",
+                "/webhooks/**"
+        );
+
+        // Verifica se a requisição bate com qualquer caminho público
+        for (String path : publicPaths) {
+            AntPathRequestMatcher matcher = new AntPathRequestMatcher(path);
+            if (matcher.matches(request)) {
+                return true;
+            }
         }
 
-        // Caso contrário, não ignora (ou seja, aplica o filtro)
         return false;
     }
 
@@ -73,7 +75,6 @@ public class SecurityFilter extends OncePerRequestFilter {
         String token = recoverToken(request);
 
         if (token == null) {
-            // Sem token: apenas segue (rotas protegidas serão negadas pelo Spring Security mais adiante)
             filterChain.doFilter(request, response);
             return;
         }
@@ -99,7 +100,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // atualizar last activity
+            // Atualiza last activity
             session.setLastActivity(LocalDateTime.now());
             sessionRepository.save(session);
 
@@ -112,12 +113,10 @@ public class SecurityFilter extends OncePerRequestFilter {
             var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // segue com a requisição autenticada
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
-            // Em caso de erro inesperado, retornar 401 com mensagem para facilitar debug
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Falha na autenticação do token: " + e.getMessage());
         }
     }
