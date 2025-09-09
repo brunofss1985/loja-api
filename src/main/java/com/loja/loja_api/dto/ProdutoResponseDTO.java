@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
 public class ProdutoResponseDTO {
 
     private Long id;
+
+    // Dados principais
     private String nome;
     private String marca;
     private String slug;
@@ -27,10 +29,11 @@ public class ProdutoResponseDTO {
     private List<String> objetivos;
     private String sabor;
     private String tamanhoPorcao;
-    private String statusAprovacao;
     private String fornecedor;
+    private String statusAprovacao;
     private String disponibilidade;
 
+    // Valores
     private Double peso;
     private Double preco;
     private Double precoDesconto;
@@ -40,6 +43,7 @@ public class ProdutoResponseDTO {
     private Boolean ativo;
     private Boolean destaque;
 
+    // Estoque e logística
     private Integer estoque;
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
@@ -48,29 +52,38 @@ public class ProdutoResponseDTO {
     private Dimensoes dimensoes;
     private List<String> restricoes;
 
+    // Nutrição e uso
     private String tabelaNutricional;
     private String modoDeUso;
 
+    // SEO e avaliações
     private List<String> palavrasChave;
     private Double avaliacaoMedia;
     private List<String> comentarios;
 
+    // Datas
     private LocalDate dataCadastro;
     private LocalDate dataUltimaAtualizacao;
     private LocalDate dataValidade;
 
+    // Fornecedor extra
     private Long fornecedorId;
     private String cnpjFornecedor;
     private String contatoFornecedor;
     private String prazoEntregaFornecedor;
 
+    // Vendas
     private Integer quantidadeVendida;
     private List<Integer> vendasMensais;
 
-    // URLs para imagens
+    // URLs para imagens (não embutir bytes no JSON)
     private String imagemUrl;
     private List<String> galeriaUrls;
 
+    /**
+     * Converte entidade Produto para DTO. Deve ser chamado dentro de um contexto transacional
+     * (com sessão aberta) pra evitar LazyInitializationException.
+     */
     public static ProdutoResponseDTO fromEntity(Produto produto) {
         return ProdutoResponseDTO.builder()
                 .id(produto.getId())
@@ -83,8 +96,8 @@ public class ProdutoResponseDTO {
                 .objetivos(produto.getObjetivos())
                 .sabor(produto.getSabor())
                 .tamanhoPorcao(produto.getTamanhoPorcao())
-                .statusAprovacao(produto.getStatusAprovacao())
                 .fornecedor(produto.getFornecedor())
+                .statusAprovacao(produto.getStatusAprovacao())
                 .disponibilidade(produto.getDisponibilidade())
                 .peso(produto.getPeso())
                 .preco(produto.getPreco())
@@ -115,9 +128,8 @@ public class ProdutoResponseDTO {
                 .prazoEntregaFornecedor(produto.getPrazoEntregaFornecedor())
                 .quantidadeVendida(produto.getQuantidadeVendida())
                 .vendasMensais(produto.getVendasMensais())
-                .imagemUrl(produto.getImagem() != null
-                        ? "/api/produtos/" + produto.getId() + "/imagem"
-                        : null)
+                // URLs relativas — front monta baseUrl (ex: https://loja-api-...herokuapp.com)
+                .imagemUrl(produto.getImagem() != null ? "/api/produtos/" + produto.getId() + "/imagem" : null)
                 .galeriaUrls(produto.getGaleria() != null
                         ? IntStream.range(0, produto.getGaleria().size())
                         .mapToObj(i -> "/api/produtos/" + produto.getId() + "/galeria/" + i)

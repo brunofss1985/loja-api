@@ -1,6 +1,7 @@
 package com.loja.loja_api.controllers;
 
 import com.loja.loja_api.dto.ProdutoDTO;
+import com.loja.loja_api.dto.ProdutoResponseDTO;
 import com.loja.loja_api.dto.CountedItemDTO;
 import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.services.FiltroService;
@@ -26,7 +27,7 @@ public class ProdutoController {
     private FiltroService filtroService;
 
     @GetMapping
-    public ResponseEntity<Page<Produto>> listarComFiltros(
+    public ResponseEntity<Page<ProdutoResponseDTO>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
             @RequestParam(required = false) List<String> marcas,
             @RequestParam(required = false) List<String> objetivos,
@@ -37,14 +38,10 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
-        List<String> marcasNorm = ListUtils.normalizeList(marcas);
-        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);
-
-        Page<Produto> produtos = service.buscarProdutosComFiltros(
-                categoriasNorm,
-                marcasNorm,
-                objetivosNorm,
+        Page<ProdutoResponseDTO> produtos = service.buscarProdutosComFiltros(
+                ListUtils.normalizeList(categorias),
+                ListUtils.normalizeList(marcas),
+                ListUtils.normalizeList(objetivos),
                 minPreco,
                 maxPreco,
                 page,
@@ -52,27 +49,26 @@ public class ProdutoController {
                 sort,
                 destaque
         );
-
         return ResponseEntity.ok(produtos);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<Produto>> buscarPorTermo(
+    public ResponseEntity<Page<ProdutoResponseDTO>> buscarPorTermo(
             @RequestParam String termo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort
     ) {
-        Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
+        Page<ProdutoResponseDTO> produtos = service.buscarPorTermo(termo, page, size, sort);
         return ResponseEntity.ok(produtos);
     }
 
     @GetMapping("/destaques")
-    public ResponseEntity<Page<Produto>> buscarProdutosEmDestaque(
+    public ResponseEntity<Page<ProdutoResponseDTO>> buscarProdutosEmDestaque(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Produto> produtos = service.buscarProdutosEmDestaque(page, size);
+        Page<ProdutoResponseDTO> produtos = service.buscarProdutosEmDestaque(page, size);
         return ResponseEntity.ok(produtos);
     }
 
@@ -131,39 +127,48 @@ public class ProdutoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+    public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
+        ProdutoResponseDTO dto = service.buscarPorId(id);
+        return ResponseEntity.ok(dto);
     }
 
-    // ✅ Endpoint para retornar a imagem principal do produto
+    // Endpoint para retornar a imagem principal do produto (bytes)
     @GetMapping("/{id}/imagem")
     public ResponseEntity<byte[]> getImagem(@PathVariable Long id) {
-        Produto produto = service.buscarPorId(id);
+        Produto produto = service.buscarPorIdEntity(id);
         if (produto.getImagem() == null) {
             return ResponseEntity.notFound().build();
         }
+        String mime = produto.getImagemMimeType() != null ? produto.getImagemMimeType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
         return ResponseEntity
                 .ok()
-                .contentType(MediaType.valueOf(produto.getImagemMimeType()))
+                .contentType(MediaType.valueOf(mime))
                 .body(produto.getImagem());
     }
 
-    // ✅ Endpoint para retornar imagens da galeria
+    // Endpoint para retornar imagens da galeria (bytes)
     @GetMapping("/{id}/galeria/{index}")
     public ResponseEntity<byte[]> getImagemGaleria(
             @PathVariable Long id,
             @PathVariable int index
     ) {
-        Produto produto = service.buscarPorId(id);
+        Produto produto = service.buscarPorIdEntity(id);
         if (produto.getGaleria() == null || index < 0 || index >= produto.getGaleria().size()) {
             return ResponseEntity.notFound().build();
         }
+        String mime = produto.getGaleriaMimeTypes() != null
+                && produto.getGaleriaMimeTypes().size() > index
+                && produto.getGaleriaMimeTypes().get(index) != null
+                ? produto.getGaleriaMimeTypes().get(index)
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
         return ResponseEntity
                 .ok()
-                .contentType(MediaType.valueOf(produto.getGaleriaMimeTypes().get(index)))
+                .contentType(MediaType.valueOf(mime))
                 .body(produto.getGaleria().get(index));
     }
 
+    // Mantidos iguais para upload (não mexer — preserva funcionalidade de upload de bytes)
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Produto> criar(
             @RequestPart("produto") ProdutoDTO dto,

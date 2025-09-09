@@ -1,12 +1,14 @@
 package com.loja.loja_api.services;
 
 import com.loja.loja_api.dto.ProdutoDTO;
+import com.loja.loja_api.dto.ProdutoResponseDTO;
 import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification;
 import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProdutoService {
@@ -27,25 +30,30 @@ public class ProdutoService {
     private ImagemService imagemService;
 
     @Transactional(readOnly = true)
-    public Page<Produto> listarTodosPaginado(int page, int size) {
+    public Page<ProdutoResponseDTO> listarTodosPaginadoDto(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return repository.findAll(pageable);
+        Page<Produto> produtos = repository.findAll(pageable);
+        // conversão dentro da transação -> evita LazyInitializationException
+        Page<ProdutoResponseDTO> dtos = produtos.map(ProdutoResponseDTO::fromEntity);
+        return dtos;
     }
 
     @Transactional(readOnly = true)
-    public Page<Produto> buscarPorTermo(String termo, int page, int size, String sort) {
+    public Page<ProdutoResponseDTO> buscarPorTermo(String termo, int page, int size, String sort) {
         Pageable pageable = buildPageable(page, size, sort);
-        return repository.findByTermo(termo, pageable);
+        Page<Produto> produtos = repository.findByTermo(termo, pageable);
+        return produtos.map(ProdutoResponseDTO::fromEntity);
     }
 
     @Transactional(readOnly = true)
-    public Page<Produto> buscarProdutosEmDestaque(int page, int size) {
+    public Page<ProdutoResponseDTO> buscarProdutosEmDestaque(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return repository.findByDestaqueAndAtivoTrue(pageable);
+        Page<Produto> produtos = repository.findByDestaqueAndAtivoTrue(pageable);
+        return produtos.map(ProdutoResponseDTO::fromEntity);
     }
 
     @Transactional(readOnly = true)
-    public Page<Produto> buscarProdutosComFiltros(
+    public Page<ProdutoResponseDTO> buscarProdutosComFiltros(
             List<String> categorias,
             List<String> marcas,
             List<String> objetivos,
@@ -71,13 +79,29 @@ public class ProdutoService {
                 destaque
         );
 
-        return repository.findAll(spec, pageable);
+        Page<Produto> produtos = repository.findAll(spec, pageable);
+        // conversão dentro da transação
+        return produtos.map(ProdutoResponseDTO::fromEntity);
     }
 
+    /**
+     * Retorna a entidade Produto (usado para endpoints de imagem e também para atualização).
+     * Mantém a assinatura original para não quebrar upload/update.
+     */
     @Transactional(readOnly = true)
-    public Produto buscarPorId(Long id) {
+    public Produto buscarPorIdEntity(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+    }
+
+    /**
+     * Retorna DTO (usado pelo controller para GET /{id}).
+     */
+    @Transactional(readOnly = true)
+    public ProdutoResponseDTO buscarPorId(Long id) {
+        Produto produto = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        return ProdutoResponseDTO.fromEntity(produto);
     }
 
     @Transactional
@@ -134,7 +158,7 @@ public class ProdutoService {
 
     @Transactional
     public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        Produto existente = buscarPorId(id);
+        Produto existente = buscarPorIdEntity(id);
 
         try {
             existente.setNome(dto.getNome());
@@ -196,7 +220,7 @@ public class ProdutoService {
 
     @Transactional
     public void deletar(Long id) {
-        Produto produto = buscarPorId(id);
+        Produto produto = buscarPorIdEntity(id);
         repository.delete(produto);
     }
 
@@ -217,7 +241,7 @@ public class ProdutoService {
 
             return PageRequest.of(page, size, Sort.by(direction, field));
         } catch (Exception e) {
-            // fallback para evitar 500/403
+            // fallback para evitar erro em produção
             return PageRequest.of(page, size);
         }
     }
