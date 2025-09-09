@@ -73,8 +73,8 @@ public class ProdutoService {
     private Pageable getPageable(int page, int size, String sort) {
         if (sort != null && !sort.equalsIgnoreCase("relevance")) {
             String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
-                    Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc")
+                    ? Sort.Direction.DESC : Sort.Direction.ASC;
             Sort sortedBy = Sort.by(direction, sortParams[0]);
             return PageRequest.of(page, size, sortedBy);
         } else {
@@ -91,28 +91,43 @@ public class ProdutoService {
     @Transactional
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto produto = buildProdutoFromDTO(dto);
-        produto.setImagem(imagemService.processarImagem(imagem));
-        produto.setImagemMimeType(imagemService.getImagemMimeType(imagem));
-        produto.setGaleria(imagemService.processarGaleria(galeriaArquivos));
-        produto.setGaleriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos));
+
+        if (imagem != null && !imagem.isEmpty()) {
+            produto.setImagem(imagemService.processarImagem(imagem));
+            produto.setImagemMimeType(imagemService.getImagemMimeType(imagem));
+        }
+
+        if (galeriaArquivos != null && !galeriaArquivos.isEmpty()) {
+            produto.setGaleria(imagemService.processarGaleria(galeriaArquivos));
+            produto.setGaleriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos));
+        }
+
         return repository.save(produto);
     }
 
     @Transactional
     public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
         Produto existente = buscarPorId(id);
+        Produto atualizado = buildProdutoFromDTO(dto);
+        atualizado.setId(existente.getId());
 
-        try {
-            Produto atualizado = buildProdutoFromDTO(dto);
-            atualizado.setId(existente.getId());
-            atualizado.setImagem(imagem != null && !imagem.isEmpty() ? imagemService.processarImagem(imagem) : existente.getImagem());
-            atualizado.setImagemMimeType(imagem != null && !imagem.isEmpty() ? imagemService.getImagemMimeType(imagem) : existente.getImagemMimeType());
-            atualizado.setGaleria(galeriaArquivos != null && !galeriaArquivos.isEmpty() ? imagemService.processarGaleria(galeriaArquivos) : existente.getGaleria());
-            atualizado.setGaleriaMimeTypes(galeriaArquivos != null && !galeriaArquivos.isEmpty() ? imagemService.getGaleriaMimeTypes(galeriaArquivos) : existente.getGaleriaMimeTypes());
-            return repository.save(atualizado);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage());
+        if (imagem != null && !imagem.isEmpty()) {
+            atualizado.setImagem(imagemService.processarImagem(imagem));
+            atualizado.setImagemMimeType(imagemService.getImagemMimeType(imagem));
+        } else {
+            atualizado.setImagem(existente.getImagem());
+            atualizado.setImagemMimeType(existente.getImagemMimeType());
         }
+
+        if (galeriaArquivos != null && !galeriaArquivos.isEmpty()) {
+            atualizado.setGaleria(imagemService.processarGaleria(galeriaArquivos));
+            atualizado.setGaleriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos));
+        } else {
+            atualizado.setGaleria(existente.getGaleria());
+            atualizado.setGaleriaMimeTypes(existente.getGaleriaMimeTypes());
+        }
+
+        return repository.save(atualizado);
     }
 
     private Produto buildProdutoFromDTO(ProdutoDTO dto) {

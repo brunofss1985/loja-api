@@ -16,7 +16,6 @@ import java.util.List;
 @Builder
 public class ProdutoDTO {
 
-    // Dados principais
     private String nome;
     private String marca;
     private String slug;
@@ -30,7 +29,6 @@ public class ProdutoDTO {
     private String statusAprovacao;
     private String disponibilidade;
 
-    // Valores
     private Double peso;
     private Double preco;
     private Double precoDesconto;
@@ -40,7 +38,6 @@ public class ProdutoDTO {
     private Boolean ativo;
     private Boolean destaque;
 
-    // Estoque e logística
     private Integer estoque;
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
@@ -49,27 +46,22 @@ public class ProdutoDTO {
     private Dimensoes dimensoes;
     private List<String> restricoes;
 
-    // Nutrição e uso
     private String tabelaNutricional;
     private String modoDeUso;
 
-    // SEO e avaliações
     private List<String> palavrasChave;
     private Double avaliacaoMedia;
     private List<String> comentarios;
 
-    // Datas
     private LocalDate dataCadastro;
     private LocalDate dataUltimaAtualizacao;
     private LocalDate dataValidade;
 
-    // Fornecedor extra
     private Long fornecedorId;
     private String cnpjFornecedor;
     private String contatoFornecedor;
     private String prazoEntregaFornecedor;
 
-    // Vendas
     private Integer quantidadeVendida;
     private List<Integer> vendasMensais;
 

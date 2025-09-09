@@ -24,7 +24,6 @@ public class ProdutoController {
     @Autowired
     private FiltroService filtroService;
 
-    // 🧠 ✅ LISTAGEM DE PRODUTOS COM DTO PARA EVITAR 403/LAZY PROBLEMAS
     @GetMapping
     public ResponseEntity<Page<ProdutoDTO>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
@@ -45,8 +44,7 @@ public class ProdutoController {
                 categoriasNorm, marcasNorm, objetivosNorm, minPreco, maxPreco, page, size, sort, destaque
         );
 
-        Page<ProdutoDTO> dtoPage = produtos.map(ProdutoDTO::fromEntity);
-        return ResponseEntity.ok(dtoPage);
+        return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
     @GetMapping("/search")
@@ -123,7 +121,6 @@ public class ProdutoController {
         return ResponseEntity.ok(filtroService.contarObjetivos());
     }
 
-    // ✅ Alterado para retornar ProdutoDTO
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
         Produto produto = service.buscarPorId(id);
