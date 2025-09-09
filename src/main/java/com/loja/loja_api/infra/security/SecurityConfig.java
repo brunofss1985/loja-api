@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/chatbot/**").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
-                        // 🆕 A rota de alteração de senha deve estar autenticada
+                        // A rota de alteração de senha deve estar autenticada
                         .requestMatchers("/api/user/change-password").authenticated()
                         // Rotas que exigem autenticação
                         .anyRequest().authenticated()
@@ -59,13 +59,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 🚨 PONTO CORRIGIDO:
-        // Defina as URLs do seu aplicativo no Netlify e no seu ambiente local (Angular)
+        // 🚨 Mantenha as duas origens, local e em produção
         configuration.setAllowedOrigins(Arrays.asList("https://lojabr.netlify.app", "http://localhost:4200"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
-        // 🚨 PONTO CORRIGIDO:
-        // Habilite o envio de credenciais (como o token JWT)
+        // 🚨 Isso é fundamental para que o front-end possa enviar o token
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
