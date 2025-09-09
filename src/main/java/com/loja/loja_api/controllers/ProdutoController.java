@@ -8,6 +8,7 @@ import com.loja.loja_api.services.ProdutoService;
 import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,9 +37,9 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
-        List<String> marcasNorm = ListUtils.normalizeList(marcas);         // ✅ Usando a classe de utilitários
-        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);   // ✅ Usando a classe de utilitários
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
+        List<String> marcasNorm = ListUtils.normalizeList(marcas);
+        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);
 
         Page<Produto> produtos = service.buscarProdutosComFiltros(
                 categoriasNorm,
@@ -89,7 +90,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
         return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(categoriasNorm));
     }
 
@@ -97,7 +98,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
-        List<String> marcasNorm = ListUtils.normalizeList(marcas); // ✅ Usando a classe de utilitários
+        List<String> marcasNorm = ListUtils.normalizeList(marcas);
         return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(marcasNorm));
     }
 
@@ -110,7 +111,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
         return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(categoriasNorm));
     }
 
@@ -132,6 +133,35 @@ public class ProdutoController {
     @GetMapping("/{id}")
     public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
+    }
+
+    // ✅ Endpoint para retornar a imagem principal do produto
+    @GetMapping("/{id}/imagem")
+    public ResponseEntity<byte[]> getImagem(@PathVariable Long id) {
+        Produto produto = service.buscarPorId(id);
+        if (produto.getImagem() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.valueOf(produto.getImagemMimeType()))
+                .body(produto.getImagem());
+    }
+
+    // ✅ Endpoint para retornar imagens da galeria
+    @GetMapping("/{id}/galeria/{index}")
+    public ResponseEntity<byte[]> getImagemGaleria(
+            @PathVariable Long id,
+            @PathVariable int index
+    ) {
+        Produto produto = service.buscarPorId(id);
+        if (produto.getGaleria() == null || index < 0 || index >= produto.getGaleria().size()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.valueOf(produto.getGaleriaMimeTypes().get(index)))
+                .body(produto.getGaleria().get(index));
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
