@@ -34,16 +34,7 @@ public class ProdutoService {
 
     @Transactional(readOnly = true)
     public Page<Produto> buscarPorTermo(String termo, int page, int size, String sort) {
-        Pageable pageable;
-        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
-            String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
-                    Sort.Direction.DESC : Sort.Direction.ASC;
-            Sort sortedBy = Sort.by(direction, sortParams[0]);
-            pageable = PageRequest.of(page, size, sortedBy);
-        } else {
-            pageable = PageRequest.of(page, size);
-        }
+        Pageable pageable = buildPageable(page, size, sort);
         return repository.findByTermo(termo, pageable);
     }
 
@@ -65,16 +56,7 @@ public class ProdutoService {
             String sort,
             Boolean destaque
     ) {
-        Pageable pageable;
-        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
-            String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
-                    Sort.Direction.DESC : Sort.Direction.ASC;
-            Sort sortedBy = Sort.by(direction, sortParams[0]);
-            pageable = PageRequest.of(page, size, sortedBy);
-        } else {
-            pageable = PageRequest.of(page, size);
-        }
+        Pageable pageable = buildPageable(page, size, sort);
 
         List<String> categoriasFiltro = ListUtils.normalizeList(categorias);
         List<String> marcasFiltro = ListUtils.normalizeList(marcas);
@@ -216,5 +198,27 @@ public class ProdutoService {
     public void deletar(Long id) {
         Produto produto = buscarPorId(id);
         repository.delete(produto);
+    }
+
+    /**
+     * Constrói o Pageable com validação para evitar ordenar por campos inválidos.
+     */
+    private Pageable buildPageable(int page, int size, String sort) {
+        if (sort == null || sort.equalsIgnoreCase("relevance")) {
+            return PageRequest.of(page, size);
+        }
+
+        try {
+            String[] sortParams = sort.split(",");
+            String field = sortParams[0];
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc")
+                    ? Sort.Direction.DESC
+                    : Sort.Direction.ASC;
+
+            return PageRequest.of(page, size, Sort.by(direction, field));
+        } catch (Exception e) {
+            // fallback para evitar 500/403
+            return PageRequest.of(page, size);
+        }
     }
 }
