@@ -25,7 +25,7 @@ public class ProdutoController {
     private FiltroService filtroService;
 
     @GetMapping
-    public ResponseEntity<Page<Produto>> listarComFiltros(
+    public ResponseEntity<Page<ProdutoDTO>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
             @RequestParam(required = false) List<String> marcas,
             @RequestParam(required = false) List<String> objetivos,
@@ -36,43 +36,35 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
-        List<String> marcasNorm = ListUtils.normalizeList(marcas);         // ✅ Usando a classe de utilitários
-        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);   // ✅ Usando a classe de utilitários
-
-        Page<Produto> produtos = service.buscarProdutosComFiltros(
-                categoriasNorm,
-                marcasNorm,
-                objetivosNorm,
+        return ResponseEntity.ok(service.buscarProdutosComFiltros(
+                ListUtils.normalizeList(categorias),
+                ListUtils.normalizeList(marcas),
+                ListUtils.normalizeList(objetivos),
                 minPreco,
                 maxPreco,
                 page,
                 size,
                 sort,
                 destaque
-        );
-
-        return ResponseEntity.ok(produtos);
+        ));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<Produto>> buscarPorTermo(
+    public ResponseEntity<Page<ProdutoDTO>> buscarPorTermo(
             @RequestParam String termo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort
     ) {
-        Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
-        return ResponseEntity.ok(produtos);
+        return ResponseEntity.ok(service.buscarPorTermo(termo, page, size, sort));
     }
 
     @GetMapping("/destaques")
-    public ResponseEntity<Page<Produto>> buscarProdutosEmDestaque(
+    public ResponseEntity<Page<ProdutoDTO>> buscarProdutosEmDestaque(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Produto> produtos = service.buscarProdutosEmDestaque(page, size);
-        return ResponseEntity.ok(produtos);
+        return ResponseEntity.ok(service.buscarProdutosEmDestaque(page, size));
     }
 
     @GetMapping("/marcas")
@@ -89,16 +81,14 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
-        return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(categoriasNorm));
+        return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(ListUtils.normalizeList(categorias)));
     }
 
     @GetMapping("/categorias-por-marca")
     public ResponseEntity<List<CountedItemDTO>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
-        List<String> marcasNorm = ListUtils.normalizeList(marcas); // ✅ Usando a classe de utilitários
-        return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(marcasNorm));
+        return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(ListUtils.normalizeList(marcas)));
     }
 
     @GetMapping("/objetivos")
@@ -110,8 +100,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
-        return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(categoriasNorm));
+        return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(ListUtils.normalizeList(categorias)));
     }
 
     @GetMapping("/marcas/count")
@@ -130,12 +119,12 @@ public class ProdutoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<Produto> criar(
+    public ResponseEntity<ProdutoDTO> criar(
             @RequestPart("produto") ProdutoDTO dto,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem,
             @RequestPart(value = "galeria", required = false) List<MultipartFile> galeria
@@ -144,7 +133,7 @@ public class ProdutoController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
-    public ResponseEntity<Produto> atualizar(
+    public ResponseEntity<ProdutoDTO> atualizar(
             @PathVariable Long id,
             @RequestPart("produto") ProdutoDTO dto,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem,
