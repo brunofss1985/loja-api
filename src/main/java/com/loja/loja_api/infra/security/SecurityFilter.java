@@ -97,7 +97,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicRoute(String path) {
-        return path.startsWith("/api/produtos")
+        return path.startsWith("/api/produtos")   // ✅ cobre raiz + subpaths
                 || path.startsWith("/auth")
                 || path.startsWith("/checkout")
                 || path.startsWith("/public")

@@ -34,8 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 🔓 Rotas públicas
                         .requestMatchers("/",
-                                "/api/produtos",
-                                "/api/produtos/**",
+                                "/api/produtos", "/api/produtos/**",
                                 "/auth/**",
                                 "/checkout/**",
                                 "/public/**",
