@@ -24,8 +24,9 @@ public class ProdutoController {
     @Autowired
     private FiltroService filtroService;
 
+    // 🧠 ✅ LISTAGEM DE PRODUTOS COM DTO PARA EVITAR 403/LAZY PROBLEMAS
     @GetMapping
-    public ResponseEntity<Page<Produto>> listarComFiltros(
+    public ResponseEntity<Page<ProdutoDTO>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
             @RequestParam(required = false) List<String> marcas,
             @RequestParam(required = false) List<String> objetivos,
@@ -36,43 +37,36 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
-        List<String> marcasNorm = ListUtils.normalizeList(marcas);         // ✅ Usando a classe de utilitários
-        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);   // ✅ Usando a classe de utilitários
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
+        List<String> marcasNorm = ListUtils.normalizeList(marcas);
+        List<String> objetivosNorm = ListUtils.normalizeList(objetivos);
 
         Page<Produto> produtos = service.buscarProdutosComFiltros(
-                categoriasNorm,
-                marcasNorm,
-                objetivosNorm,
-                minPreco,
-                maxPreco,
-                page,
-                size,
-                sort,
-                destaque
+                categoriasNorm, marcasNorm, objetivosNorm, minPreco, maxPreco, page, size, sort, destaque
         );
 
-        return ResponseEntity.ok(produtos);
+        Page<ProdutoDTO> dtoPage = produtos.map(ProdutoDTO::fromEntity);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<Produto>> buscarPorTermo(
+    public ResponseEntity<Page<ProdutoDTO>> buscarPorTermo(
             @RequestParam String termo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort
     ) {
         Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
-        return ResponseEntity.ok(produtos);
+        return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
     @GetMapping("/destaques")
-    public ResponseEntity<Page<Produto>> buscarProdutosEmDestaque(
+    public ResponseEntity<Page<ProdutoDTO>> buscarProdutosEmDestaque(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<Produto> produtos = service.buscarProdutosEmDestaque(page, size);
-        return ResponseEntity.ok(produtos);
+        return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
     @GetMapping("/marcas")
@@ -89,7 +83,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarMarcasPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
         return ResponseEntity.ok(filtroService.listarMarcasPorCategorias(categoriasNorm));
     }
 
@@ -97,7 +91,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarCategoriasPorMarcas(
             @RequestParam(required = false) List<String> marcas
     ) {
-        List<String> marcasNorm = ListUtils.normalizeList(marcas); // ✅ Usando a classe de utilitários
+        List<String> marcasNorm = ListUtils.normalizeList(marcas);
         return ResponseEntity.ok(filtroService.listarCategoriasPorMarcas(marcasNorm));
     }
 
@@ -110,7 +104,7 @@ public class ProdutoController {
     public ResponseEntity<List<CountedItemDTO>> listarObjetivosPorCategorias(
             @RequestParam(required = false) List<String> categorias
     ) {
-        List<String> categoriasNorm = ListUtils.normalizeList(categorias); // ✅ Usando a classe de utilitários
+        List<String> categoriasNorm = ListUtils.normalizeList(categorias);
         return ResponseEntity.ok(filtroService.listarObjetivosPorCategorias(categoriasNorm));
     }
 
@@ -129,9 +123,11 @@ public class ProdutoController {
         return ResponseEntity.ok(filtroService.contarObjetivos());
     }
 
+    // ✅ Alterado para retornar ProdutoDTO
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+    public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
+        Produto produto = service.buscarPorId(id);
+        return ResponseEntity.ok(ProdutoDTO.fromEntity(produto));
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
