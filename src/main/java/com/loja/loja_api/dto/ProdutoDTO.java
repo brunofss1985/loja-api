@@ -8,7 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @NoArgsConstructor
@@ -72,8 +74,9 @@ public class ProdutoDTO {
                 .slug(p.getSlug())
                 .descricao(p.getDescricao())
                 .descricaoCurta(p.getDescricaoCurta())
-                .categorias(p.getCategorias())
-                .objetivos(p.getObjetivos())
+                // CÓPIA DEFENSIVA — evita LazyInitialization e tipos do Hibernate no DTO
+                .categorias(copyList(p.getCategorias()))
+                .objetivos(copyList(p.getObjetivos()))
                 .sabor(p.getSabor())
                 .tamanhoPorcao(p.getTamanhoPorcao())
                 .fornecedor(p.getFornecedor())
@@ -92,13 +95,13 @@ public class ProdutoDTO {
                 .estoqueMaximo(p.getEstoqueMaximo())
                 .localizacaoFisica(p.getLocalizacaoFisica())
                 .codigoBarras(p.getCodigoBarras())
-                .dimensoes(p.getDimensoes())
-                .restricoes(p.getRestricoes())
+                .dimensoes(p.getDimensoes()) // é embeddable simples
+                .restricoes(copyList(p.getRestricoes()))
                 .tabelaNutricional(p.getTabelaNutricional())
                 .modoDeUso(p.getModoDeUso())
-                .palavrasChave(p.getPalavrasChave())
+                .palavrasChave(copyList(p.getPalavrasChave()))
                 .avaliacaoMedia(p.getAvaliacaoMedia())
-                .comentarios(p.getComentarios())
+                .comentarios(copyList(p.getComentarios()))
                 .dataCadastro(p.getDataCadastro())
                 .dataUltimaAtualizacao(p.getDataUltimaAtualizacao())
                 .dataValidade(p.getDataValidade())
@@ -107,7 +110,15 @@ public class ProdutoDTO {
                 .contatoFornecedor(p.getContatoFornecedor())
                 .prazoEntregaFornecedor(p.getPrazoEntregaFornecedor())
                 .quantidadeVendida(p.getQuantidadeVendida())
-                .vendasMensais(p.getVendasMensais())
+                .vendasMensais(copyList(p.getVendasMensais()))
                 .build();
+    }
+
+    private static <T> List<T> copyList(List<T> src) {
+        if (src == null) return null;
+        // cria uma lista “pura”, inicializando o proxy ao iterar
+        List<T> out = new ArrayList<>(src.size());
+        for (T t : src) out.add(t);
+        return out;
     }
 }
