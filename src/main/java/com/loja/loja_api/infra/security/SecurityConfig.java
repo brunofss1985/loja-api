@@ -14,7 +14,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -28,18 +27,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    // Ordem importa! Coloque rota exatas antes de padrões mais gerais.
-                    .requestMatchers("/api/produtos/**").permitAll()
-                    .requestMatchers("/auth/**", "/checkout/**", "/public/**", "/chatbot/**", "/webhooks/**").permitAll()
-                    .anyRequest().authenticated()
-            )
-            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        // Ordem importa: rotas abertas primeiro
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/error", "/error/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/auth/**", "/checkout/**", "/public/**", "/chatbot/**", "/webhooks/**").permitAll()
+                        .requestMatchers("/api/produtos/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -53,22 +53,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Origens permitidas
         configuration.setAllowedOrigins(List.of(
                 "https://lojabr.netlify.app",
                 "http://localhost:4200"
         ));
-
-        // Métodos permitidos
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // ⚠️ IMPORTANTE: especificar os headers explicitamente ao usar allowCredentials = true
+        // Se você usa credenciais, declare explicitamente os headers aceitos
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-        // Cabeçalhos expostos ao frontend (caso queira capturar Authorization, etc.)
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
-
-        // Permitir cookies/tokens
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

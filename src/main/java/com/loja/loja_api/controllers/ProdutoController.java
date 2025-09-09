@@ -9,6 +9,7 @@ import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +25,7 @@ public class ProdutoController {
     @Autowired
     private FiltroService filtroService;
 
+    @Transactional(readOnly = true)
     @GetMapping
     public ResponseEntity<Page<ProdutoDTO>> listarComFiltros(
             @RequestParam(required = false) List<String> categorias,
@@ -45,6 +47,7 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
+    @Transactional(readOnly = true)
     @GetMapping("/search")
     public ResponseEntity<Page<ProdutoDTO>> buscarPorTermo(
             @RequestParam String termo,
@@ -56,6 +59,7 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
+    @Transactional(readOnly = true)
     @GetMapping("/destaques")
     public ResponseEntity<Page<ProdutoDTO>> buscarProdutosEmDestaque(
             @RequestParam(defaultValue = "0") int page,
@@ -65,6 +69,7 @@ public class ProdutoController {
         return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
     }
 
+    @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
         Produto produto = service.buscarPorId(id);
@@ -98,7 +103,7 @@ public class ProdutoController {
         return ResponseEntity.noContent().build();
     }
 
-    // Métodos auxiliares
+    // Métodos auxiliares (somente leitura também podem se beneficiar, mas não foi necessário no log)
     @GetMapping("/marcas")
     public ResponseEntity<List<CountedItemDTO>> listarMarcas() {
         return ResponseEntity.ok(filtroService.listarMarcas());
