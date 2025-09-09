@@ -32,18 +32,18 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Permite acesso a rotas públicas
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/produtos").permitAll()
-                        .requestMatchers("/api/produtos/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/checkout", "/checkout/**").permitAll()
-                        .requestMatchers("/public/**").permitAll()
-                        .requestMatchers("/chatbot/**").permitAll()
-                        .requestMatchers("/webhooks/**").permitAll()
-                        // A rota de alteração de senha deve estar autenticada
+                        // 🔓 Rotas públicas
+                        .requestMatchers("/",
+                                "/api/produtos",
+                                "/api/produtos/**",
+                                "/auth/**",
+                                "/checkout/**",
+                                "/public/**",
+                                "/chatbot/**",
+                                "/webhooks/**").permitAll()
+                        // 🔒 Exemplo de rota que precisa de login
                         .requestMatchers("/api/user/change-password").authenticated()
-                        // Rotas que exigem autenticação
+                        // 🔒 Qualquer outra precisa de login
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
@@ -59,13 +59,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 🚨 Mantenha as duas origens, local e em produção
-        configuration.setAllowedOrigins(Arrays.asList("https://lojabr.netlify.app", "http://localhost:4200"));
+
+        // ✅ Origens permitidas (dev + prod)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://lojabr.netlify.app",
+                "http://localhost:4200"
+        ));
+
+        // ✅ Métodos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        // ✅ Headers
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
-        configuration.setAllowedHeaders(List.of("*"));
-        // 🚨 Isso é fundamental para que o front-end possa enviar o token
+
+        // ✅ Para permitir cookies/tokens
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

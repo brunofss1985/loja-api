@@ -39,6 +39,14 @@ public class SecurityFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        // 🔓 Ignorar rotas públicas
+        if (isPublicRoute(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = recoverToken(request);
 
         if (token != null) {
@@ -74,7 +82,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
-                System.err.println("Falha na autenticação do token: " + e.getMessage());
+                System.err.println("❌ Falha na autenticação do token: " + e.getMessage());
             }
         }
 
@@ -86,5 +94,15 @@ public class SecurityFilter extends OncePerRequestFilter {
         return (authHeader != null && authHeader.startsWith("Bearer "))
                 ? authHeader.substring(7)
                 : null;
+    }
+
+    private boolean isPublicRoute(String path) {
+        return path.startsWith("/api/produtos")
+                || path.startsWith("/auth")
+                || path.startsWith("/checkout")
+                || path.startsWith("/public")
+                || path.startsWith("/chatbot")
+                || path.startsWith("/webhooks")
+                || path.equals("/");
     }
 }
