@@ -28,29 +28,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // Ordem importa! Coloque rota exatas antes de padrões mais gerais.
+                    .requestMatchers("/api/produtos/**").permitAll()
+                    .requestMatchers("/auth/**", "/checkout/**", "/public/**", "/chatbot/**", "/webhooks/**").permitAll()
+                    .anyRequest().authenticated()
+            )
+            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
-                        // rotas públicas
-                        .requestMatchers(
-                                "/",
-                                "/api/produtos", "/api/produtos/**",
-                                "/auth/**",
-                                "/checkout/**",
-                                "/public/**",
-                                "/chatbot/**",
-                                "/webhooks/**"
-                        ).permitAll()
-
-                        .requestMatchers("/api/user/change-password").authenticated()
-
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
