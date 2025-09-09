@@ -61,6 +61,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // 🚨 Mantenha as duas origens, local e em produção
         configuration.setAllowedOrigins(Arrays.asList("https://lojabr.netlify.app", "http://localhost:4200"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         // 🚨 Isso é fundamental para que o front-end possa enviar o token
