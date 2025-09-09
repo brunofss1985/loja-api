@@ -34,16 +34,7 @@ public class ProdutoService {
 
     @Transactional(readOnly = true)
     public Page<Produto> buscarPorTermo(String termo, int page, int size, String sort) {
-        Pageable pageable;
-        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
-            String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
-                    Sort.Direction.DESC : Sort.Direction.ASC;
-            Sort sortedBy = Sort.by(direction, sortParams[0]);
-            pageable = PageRequest.of(page, size, sortedBy);
-        } else {
-            pageable = PageRequest.of(page, size);
-        }
+        Pageable pageable = getPageable(page, size, sort);
         return repository.findByTermo(termo, pageable);
     }
 
@@ -65,31 +56,30 @@ public class ProdutoService {
             String sort,
             Boolean destaque
     ) {
-        Pageable pageable;
-        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
-            String[] sortParams = sort.split(",");
-            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
-                    Sort.Direction.DESC : Sort.Direction.ASC;
-            Sort sortedBy = Sort.by(direction, sortParams[0]);
-            pageable = PageRequest.of(page, size, sortedBy);
-        } else {
-            pageable = PageRequest.of(page, size);
-        }
-
-        List<String> categoriasFiltro = ListUtils.normalizeList(categorias);
-        List<String> marcasFiltro = ListUtils.normalizeList(marcas);
-        List<String> objetivosFiltro = ListUtils.normalizeList(objetivos);
+        Pageable pageable = getPageable(page, size, sort);
 
         Specification<Produto> spec = ProdutoSpecification.comFiltros(
-                categoriasFiltro,
-                marcasFiltro,
-                objetivosFiltro,
+                ListUtils.normalizeList(categorias),
+                ListUtils.normalizeList(marcas),
+                ListUtils.normalizeList(objetivos),
                 minPreco,
                 maxPreco,
                 destaque
         );
 
         return repository.findAll(spec, pageable);
+    }
+
+    private Pageable getPageable(int page, int size, String sort) {
+        if (sort != null && !sort.equalsIgnoreCase("relevance")) {
+            String[] sortParams = sort.split(",");
+            Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc") ?
+                    Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sortedBy = Sort.by(direction, sortParams[0]);
+            return PageRequest.of(page, size, sortedBy);
+        } else {
+            return PageRequest.of(page, size);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -100,7 +90,33 @@ public class ProdutoService {
 
     @Transactional
     public Produto salvar(ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        Produto produto = Produto.builder()
+        Produto produto = buildProdutoFromDTO(dto);
+        produto.setImagem(imagemService.processarImagem(imagem));
+        produto.setImagemMimeType(imagemService.getImagemMimeType(imagem));
+        produto.setGaleria(imagemService.processarGaleria(galeriaArquivos));
+        produto.setGaleriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos));
+        return repository.save(produto);
+    }
+
+    @Transactional
+    public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
+        Produto existente = buscarPorId(id);
+
+        try {
+            Produto atualizado = buildProdutoFromDTO(dto);
+            atualizado.setId(existente.getId());
+            atualizado.setImagem(imagem != null && !imagem.isEmpty() ? imagemService.processarImagem(imagem) : existente.getImagem());
+            atualizado.setImagemMimeType(imagem != null && !imagem.isEmpty() ? imagemService.getImagemMimeType(imagem) : existente.getImagemMimeType());
+            atualizado.setGaleria(galeriaArquivos != null && !galeriaArquivos.isEmpty() ? imagemService.processarGaleria(galeriaArquivos) : existente.getGaleria());
+            atualizado.setGaleriaMimeTypes(galeriaArquivos != null && !galeriaArquivos.isEmpty() ? imagemService.getGaleriaMimeTypes(galeriaArquivos) : existente.getGaleriaMimeTypes());
+            return repository.save(atualizado);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage());
+        }
+    }
+
+    private Produto buildProdutoFromDTO(ProdutoDTO dto) {
+        return Produto.builder()
                 .nome(dto.getNome())
                 .marca(dto.getMarca())
                 .slug(dto.getSlug())
@@ -142,74 +158,7 @@ public class ProdutoService {
                 .prazoEntregaFornecedor(dto.getPrazoEntregaFornecedor())
                 .quantidadeVendida(dto.getQuantidadeVendida())
                 .vendasMensais(dto.getVendasMensais())
-                .imagem(imagemService.processarImagem(imagem))
-                .imagemMimeType(imagemService.getImagemMimeType(imagem))
-                .galeria(imagemService.processarGaleria(galeriaArquivos))
-                .galeriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos))
                 .build();
-        return repository.save(produto);
-    }
-
-    @Transactional
-    public Produto atualizar(Long id, ProdutoDTO dto, MultipartFile imagem, List<MultipartFile> galeriaArquivos) {
-        Produto existente = buscarPorId(id);
-
-        try {
-            existente.setNome(dto.getNome());
-            existente.setMarca(dto.getMarca());
-            existente.setSlug(dto.getSlug());
-            existente.setDescricao(dto.getDescricao());
-            existente.setDescricaoCurta(dto.getDescricaoCurta());
-            existente.setCategorias(dto.getCategorias());
-            existente.setPeso(dto.getPeso());
-            existente.setSabor(dto.getSabor());
-            existente.setTamanhoPorcao(dto.getTamanhoPorcao());
-            existente.setPreco(dto.getPreco());
-            existente.setPrecoDesconto(dto.getPrecoDesconto());
-            existente.setPorcentagemDesconto(dto.getPorcentagemDesconto());
-            existente.setCusto(dto.getCusto());
-            existente.setFornecedor(dto.getFornecedor());
-            existente.setLucroEstimado(dto.getLucroEstimado());
-            existente.setStatusAprovacao(dto.getStatusAprovacao());
-            existente.setAtivo(dto.getAtivo());
-            existente.setDestaque(dto.getDestaque());
-            existente.setObjetivos(dto.getObjetivos());
-            existente.setDisponibilidade(dto.getDisponibilidade());
-            existente.setEstoque(dto.getEstoque());
-            existente.setEstoqueMinimo(dto.getEstoqueMinimo());
-            existente.setEstoqueMaximo(dto.getEstoqueMaximo());
-            existente.setLocalizacaoFisica(dto.getLocalizacaoFisica());
-            existente.setCodigoBarras(dto.getCodigoBarras());
-            existente.setDimensoes(dto.getDimensoes());
-            existente.setRestricoes(dto.getRestricoes());
-            existente.setTabelaNutricional(dto.getTabelaNutricional());
-            existente.setModoDeUso(dto.getModoDeUso());
-            existente.setPalavrasChave(dto.getPalavrasChave());
-            existente.setAvaliacaoMedia(dto.getAvaliacaoMedia());
-            existente.setComentarios(dto.getComentarios());
-            existente.setDataCadastro(dto.getDataCadastro());
-            existente.setDataUltimaAtualizacao(dto.getDataUltimaAtualizacao());
-            existente.setDataValidade(dto.getDataValidade());
-            existente.setFornecedorId(dto.getFornecedorId());
-            existente.setCnpjFornecedor(dto.getCnpjFornecedor());
-            existente.setContatoFornecedor(dto.getContatoFornecedor());
-            existente.setPrazoEntregaFornecedor(dto.getPrazoEntregaFornecedor());
-            existente.setQuantidadeVendida(dto.getQuantidadeVendida());
-            existente.setVendasMensais(dto.getVendasMensais());
-
-            if (imagem != null && !imagem.isEmpty()) {
-                existente.setImagem(imagemService.processarImagem(imagem));
-                existente.setImagemMimeType(imagemService.getImagemMimeType(imagem));
-            }
-            if (galeriaArquivos != null && !galeriaArquivos.isEmpty()) {
-                existente.setGaleria(imagemService.processarGaleria(galeriaArquivos));
-                existente.setGaleriaMimeTypes(imagemService.getGaleriaMimeTypes(galeriaArquivos));
-            }
-            return repository.save(existente);
-
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage());
-        }
     }
 
     @Transactional
