@@ -18,6 +18,14 @@ RUN ./mvnw clean package -DskipTests
 # Etapa 2: Runtime com JRE
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
+
 COPY --from=build /app/target/loja-api-0.0.1-SNAPSHOT.jar app.jar
+
+# Expor a porta
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Define variável de ambiente padrão
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# Usa a variável para o profile
+ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}", "-jar", "app.jar"]
