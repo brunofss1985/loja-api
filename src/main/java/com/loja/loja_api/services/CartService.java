@@ -20,9 +20,17 @@ public class CartService {
         return cartRepository.findAll();
     }
 
+    // 💡 Ajuste #1: Adicione a anotação @Transactional
+    @Transactional(readOnly = true)
     public Cart getCartByUserId(String userId) {
-        return cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findByUserId(userId)
                 .orElseGet(() -> cartRepository.save(new Cart(null, userId, new ArrayList<>(), 0.0, 0.0, new java.util.Date())));
+
+        // 💡 Ajuste #2: Force a inicialização da coleção de itens
+        // O método .size() é uma forma leve de fazer isso.
+        cart.getItems().size();
+
+        return cart;
     }
 
     @Transactional
