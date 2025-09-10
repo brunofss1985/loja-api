@@ -17,7 +17,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 public class ProdutoDTO {
-
+    private Long id;
     private String nome;
     private String marca;
     private String slug;
@@ -69,6 +69,7 @@ public class ProdutoDTO {
 
     public static ProdutoDTO fromEntity(Produto p) {
         return ProdutoDTO.builder()
+                .id(p.getId())
                 .nome(p.getNome())
                 .marca(p.getMarca())
                 .slug(p.getSlug())
