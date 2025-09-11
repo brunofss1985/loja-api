@@ -2,21 +2,17 @@ package com.loja.loja_api.dto;
 
 import com.loja.loja_api.models.Dimensoes;
 import com.loja.loja_api.models.Produto;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ProdutoDTO {
+
     private Long id;
     private String nome;
     private String marca;
@@ -30,7 +26,6 @@ public class ProdutoDTO {
     private String fornecedor;
     private String statusAprovacao;
     private String disponibilidade;
-
     private Double peso;
     private Double preco;
     private Double precoDesconto;
@@ -39,7 +34,6 @@ public class ProdutoDTO {
     private Double lucroEstimado;
     private Boolean ativo;
     private Boolean destaque;
-
     private Integer estoque;
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
@@ -47,25 +41,26 @@ public class ProdutoDTO {
     private String codigoBarras;
     private Dimensoes dimensoes;
     private List<String> restricoes;
-
     private String tabelaNutricional;
     private String modoDeUso;
-
     private List<String> palavrasChave;
     private Double avaliacaoMedia;
     private List<String> comentarios;
-
     private LocalDate dataCadastro;
     private LocalDate dataUltimaAtualizacao;
     private LocalDate dataValidade;
-
     private Long fornecedorId;
     private String cnpjFornecedor;
     private String contatoFornecedor;
     private String prazoEntregaFornecedor;
-
     private Integer quantidadeVendida;
     private List<Integer> vendasMensais;
+
+    // ⚠️ Adicione os campos de imagem aqui:
+    private String imagemMimeType;
+    private String imagemBase64;
+    private List<String> galeriaMimeTypes;
+    private List<String> galeriaBase64;
 
     public static ProdutoDTO fromEntity(Produto p) {
         return ProdutoDTO.builder()
@@ -75,9 +70,8 @@ public class ProdutoDTO {
                 .slug(p.getSlug())
                 .descricao(p.getDescricao())
                 .descricaoCurta(p.getDescricaoCurta())
-                // CÓPIA DEFENSIVA — evita LazyInitialization e tipos do Hibernate no DTO
-                .categorias(copyList(p.getCategorias()))
-                .objetivos(copyList(p.getObjetivos()))
+                .categorias(new ArrayList<>(Optional.ofNullable(p.getCategorias()).orElse(Collections.emptyList())))
+                .objetivos(new ArrayList<>(Optional.ofNullable(p.getObjetivos()).orElse(Collections.emptyList())))
                 .sabor(p.getSabor())
                 .tamanhoPorcao(p.getTamanhoPorcao())
                 .fornecedor(p.getFornecedor())
@@ -96,13 +90,13 @@ public class ProdutoDTO {
                 .estoqueMaximo(p.getEstoqueMaximo())
                 .localizacaoFisica(p.getLocalizacaoFisica())
                 .codigoBarras(p.getCodigoBarras())
-                .dimensoes(p.getDimensoes()) // é embeddable simples
-                .restricoes(copyList(p.getRestricoes()))
+                .dimensoes(p.getDimensoes())
+                .restricoes(new ArrayList<>(Optional.ofNullable(p.getRestricoes()).orElse(Collections.emptyList())))
                 .tabelaNutricional(p.getTabelaNutricional())
                 .modoDeUso(p.getModoDeUso())
-                .palavrasChave(copyList(p.getPalavrasChave()))
+                .palavrasChave(new ArrayList<>(Optional.ofNullable(p.getPalavrasChave()).orElse(Collections.emptyList())))
                 .avaliacaoMedia(p.getAvaliacaoMedia())
-                .comentarios(copyList(p.getComentarios()))
+                .comentarios(new ArrayList<>(Optional.ofNullable(p.getComentarios()).orElse(Collections.emptyList())))
                 .dataCadastro(p.getDataCadastro())
                 .dataUltimaAtualizacao(p.getDataUltimaAtualizacao())
                 .dataValidade(p.getDataValidade())
@@ -111,15 +105,24 @@ public class ProdutoDTO {
                 .contatoFornecedor(p.getContatoFornecedor())
                 .prazoEntregaFornecedor(p.getPrazoEntregaFornecedor())
                 .quantidadeVendida(p.getQuantidadeVendida())
-                .vendasMensais(copyList(p.getVendasMensais()))
+                .vendasMensais(new ArrayList<>(Optional.ofNullable(p.getVendasMensais()).orElse(Collections.emptyList())))
+                .imagemMimeType(p.getImagemMimeType())
+                .imagemBase64(encodeBase64(p.getImagem()))
+                .galeriaMimeTypes(new ArrayList<>(Optional.ofNullable(p.getGaleriaMimeTypes()).orElse(Collections.emptyList())))
+                .galeriaBase64(encodeGaleria(p.getGaleria()))
                 .build();
     }
 
-    private static <T> List<T> copyList(List<T> src) {
-        if (src == null) return null;
-        // cria uma lista “pura”, inicializando o proxy ao iterar
-        List<T> out = new ArrayList<>(src.size());
-        for (T t : src) out.add(t);
-        return out;
+    private static String encodeBase64(byte[] data) {
+        return (data != null) ? Base64.getEncoder().encodeToString(data) : null;
+    }
+
+    private static List<String> encodeGaleria(List<byte[]> galeria) {
+        if (galeria == null) return Collections.emptyList();
+        List<String> base64List = new ArrayList<>();
+        for (byte[] img : galeria) {
+            base64List.add(encodeBase64(img));
+        }
+        return base64List;
     }
 }
