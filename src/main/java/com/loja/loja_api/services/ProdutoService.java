@@ -152,7 +152,7 @@ public class ProdutoService {
                 .ativo(dto.getAtivo())
                 .destaque(dto.getDestaque())
                 .disponibilidade(dto.getDisponibilidade())
-                .estoque(dto.getEstoque())
+                // ❌ não setamos mais estoque, ele vem dos lotes
                 .estoqueMinimo(dto.getEstoqueMinimo())
                 .estoqueMaximo(dto.getEstoqueMaximo())
                 .localizacaoFisica(dto.getLocalizacaoFisica())

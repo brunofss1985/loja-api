@@ -1,13 +1,15 @@
 package com.loja.loja_api.services;
 
+import com.loja.loja_api.models.Lote;
 import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
-import com.loja.loja_api.repositories.ProdutoSpecification; // ✅ Importa a nova classe de Specification
+import com.loja.loja_api.repositories.ProdutoSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification; // ✅ Importa a interface Specification
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.text.NumberFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -19,7 +21,6 @@ public class ProductChatService {
 
     public String getProductsForChatbot() {
         try {
-            // ✅ Substituindo a chamada findByAtivoTrue() por uma Specification
             Specification<Produto> spec = ProdutoSpecification.comFiltros(null, null, null, null, null, null);
             List<Produto> produtos = produtoRepository.findAll(spec);
 
@@ -31,7 +32,6 @@ public class ProductChatService {
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
             for (Produto produto : produtos) {
-                // Usa preço com desconto se disponível, senão preço normal
                 Double precoFinal = produto.getPrecoDesconto() != null && produto.getPrecoDesconto() > 0
                         ? produto.getPrecoDesconto()
                         : produto.getPreco();
@@ -39,12 +39,10 @@ public class ProductChatService {
                 String preco = precoFinal != null ?
                         currencyFormat.format(precoFinal) : "Consulte preço";
 
-                // Monta descrição do produto
                 String descricao = produto.getDescricaoCurta() != null ?
                         produto.getDescricaoCurta() :
                         (produto.getDescricao() != null ? produto.getDescricao() : "Suplemento de qualidade");
 
-                // Adiciona informação de sabor se disponível
                 String sabor = produto.getSabor() != null ? " (" + produto.getSabor() + ")" : "";
 
                 produtosInfo.append(String.format(
@@ -55,9 +53,12 @@ public class ProductChatService {
                         descricao
                 ));
 
-                // Adiciona informação de estoque baixo se necessário
-                if (produto.getEstoque() != null && produto.getEstoqueMinimo() != null &&
-                        produto.getEstoque() <= produto.getEstoqueMinimo()) {
+                // ✅ Agora estoque é calculado a partir dos lotes
+                int estoqueTotal = (produto.getLotes() != null)
+                        ? produto.getLotes().stream().mapToInt(Lote::getQuantidade).sum()
+                        : 0;
+
+                if (produto.getEstoqueMinimo() != null && estoqueTotal <= produto.getEstoqueMinimo()) {
                     produtosInfo.append("  ⚠️ Estoque limitado!\n");
                 }
             }
@@ -72,7 +73,6 @@ public class ProductChatService {
 
     public String getProductsByCategory(String categoria) {
         try {
-            // ✅ Substituindo a chamada findByCategoriaIgnoreCaseAndAtivoTrue() por uma Specification
             Specification<Produto> spec = ProdutoSpecification.comFiltros(List.of(categoria), null, null, null, null, null);
             List<Produto> produtos = produtoRepository.findAll(spec);
 
@@ -115,13 +115,11 @@ public class ProductChatService {
     }
 
     public List<Produto> getAllActiveProducts() {
-        // ✅ Substituindo a chamada findByAtivoTrue() por uma Specification
         Specification<Produto> spec = ProdutoSpecification.comFiltros(null, null, null, null, null, null);
         return produtoRepository.findAll(spec);
     }
 
     public Produto findProductByName(String name) {
-        // ✅ A busca por nome agora usa o método findByTermo que mantivemos no ProdutoRepository
         List<Produto> produtos = produtoRepository.findByTermo(name, null).getContent();
         return produtos.isEmpty() ? null : produtos.get(0);
     }

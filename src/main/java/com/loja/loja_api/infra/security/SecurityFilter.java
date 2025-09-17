@@ -42,16 +42,15 @@ public class SecurityFilter extends OncePerRequestFilter {
             return true;
         }
 
-        // Lista de caminhos públicos com suporte a wildcards
+        // ✅ Caminhos totalmente públicos
         List<String> publicPaths = List.of(
                 "/",
                 "/auth/**",
-                "/api/produtos",
-                "/api/produtos/**",
                 "/checkout/**",
                 "/public/**",
                 "/chatbot/**",
-                "/webhooks/**"
+                "/webhooks/**",
+                "/api/estoque/validade-alerta/**"
         );
 
         // Verifica se a requisição bate com qualquer caminho público
@@ -109,6 +108,9 @@ public class SecurityFilter extends OncePerRequestFilter {
 
             String role = "ROLE_" + user.getUserType().name();
             var authorities = List.of(new SimpleGrantedAuthority(role));
+
+            // Debug (pode remover depois)
+            System.out.println(">> Autenticado: " + user.getEmail() + " | Role: " + role);
 
             var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -92,39 +92,30 @@ public class AuthService {
         );
     }
 
-    // Novo método para login com o Google
     public ResponseDTO googleLogin(String idTokenString) {
-        // Inicializa o verificador com a Client ID do Google
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
                 .setAudience(Collections.singletonList(googleClientId))
                 .build();
 
         try {
-            // Tenta validar o token
             GoogleIdToken idToken = verifier.verify(idTokenString);
             if (idToken != null) {
-                // Se o token for válido, extrai as informações do payload
                 GoogleIdToken.Payload payload = idToken.getPayload();
                 String email = payload.getEmail();
                 String name = (String) payload.get("name");
 
-                // Procura o usuário no banco de dados
                 Optional<User> existingUser = repository.findByEmail(email);
-
                 User user;
                 if (existingUser.isPresent()) {
-                    // Se o usuário já existe, usa o registro existente
                     user = existingUser.get();
                 } else {
-                    // Se o usuário não existe, cria um novo
                     user = new User();
                     user.setName(name);
                     user.setEmail(email);
-                    user.setUserType(UserType.USER); // Define o tipo de usuário padrão
+                    user.setUserType(UserType.USER);
                     repository.save(user);
                 }
 
-                // Gera um novo token JWT e uma nova sessão
                 String token = tokenService.generateToken(user);
 
                 Session session = new Session();

@@ -34,7 +34,8 @@ public class ProdutoDTO {
     private Double lucroEstimado;
     private Boolean ativo;
     private Boolean destaque;
-    private Integer estoque;
+
+    private Integer estoqueTotal; // calculado a partir dos lotes
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
     private String localizacaoFisica;
@@ -56,13 +57,16 @@ public class ProdutoDTO {
     private Integer quantidadeVendida;
     private List<Integer> vendasMensais;
 
-    // ⚠️ Adicione os campos de imagem aqui:
     private String imagemMimeType;
     private String imagemBase64;
     private List<String> galeriaMimeTypes;
     private List<String> galeriaBase64;
 
     public static ProdutoDTO fromEntity(Produto p) {
+        int estoqueTotal = (p.getLotes() != null)
+                ? p.getLotes().stream().mapToInt(l -> l.getQuantidade()).sum()
+                : 0;
+
         return ProdutoDTO.builder()
                 .id(p.getId())
                 .nome(p.getNome())
@@ -85,7 +89,7 @@ public class ProdutoDTO {
                 .lucroEstimado(p.getLucroEstimado())
                 .ativo(p.getAtivo())
                 .destaque(p.getDestaque())
-                .estoque(p.getEstoque())
+                .estoqueTotal(estoqueTotal)
                 .estoqueMinimo(p.getEstoqueMinimo())
                 .estoqueMaximo(p.getEstoqueMaximo())
                 .localizacaoFisica(p.getLocalizacaoFisica())

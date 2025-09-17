@@ -1,11 +1,7 @@
 package com.loja.loja_api.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -56,10 +52,9 @@ public class Produto {
     private Double custo;
     private Double lucroEstimado;
     private Boolean ativo;
-    private Boolean destaque; // ✅ NOVO CAMPO: Destaque
+    private Boolean destaque;
 
-    // Estoque e logística
-    private Integer estoque;
+    // Estoque e logística (estoque removido, controlado via lotes)
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
     private String localizacaoFisica;
@@ -76,7 +71,6 @@ public class Produto {
     // Nutrição e uso
     @Lob
     private String tabelaNutricional;
-
     private String modoDeUso;
 
     // SEO e avaliações
@@ -127,4 +121,8 @@ public class Produto {
     @CollectionTable(name = "produto_galeria_mime", joinColumns = @JoinColumn(name = "produto_id"))
     @Column(name = "mime_type")
     private List<String> galeriaMimeTypes;
+
+    // Associação com lotes
+    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Lote> lotes;
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 
 @Service
 public class TokenService {
@@ -21,16 +22,18 @@ public class TokenService {
     public String generateToken(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
+            Instant expirationInstant = generateExpirationDate();
             return JWT.create()
                     .withIssuer("login-auth-api")
                     .withSubject(user.getEmail())
                     .withClaim("userType", user.getUserType().name())
-                    .withExpiresAt(generateExpirationDate())
+                    .withExpiresAt(Date.from(expirationInstant))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
             throw new RuntimeException("Erro ao gerar o token JWT", exception);
         }
     }
+
 
     public String validateToken(String token) {
         try {

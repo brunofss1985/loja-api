@@ -32,11 +32,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Ordem importa: rotas abertas primeiro
+                        // ✅ Libera OPTIONS (CORS preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // ✅ Endpoints públicos
                         .requestMatchers("/error", "/error/**", "/favicon.ico").permitAll()
                         .requestMatchers("/auth/**", "/checkout/**", "/public/**", "/chatbot/**", "/webhooks/**").permitAll()
-                        .requestMatchers("/api/produtos/**").permitAll()
+                        // Produtos
+                        .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/produtos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/produtos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/produtos/**").hasRole("ADMIN")
+
+
+                        // ✅ Produtos - consulta pública
+                        .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
+
+                        // 🔒 Lotes - somente ADMIN em qualquer operação
+                        .requestMatchers("/api/lotes/**").hasRole("ADMIN")
+
+                        // ✅ Qualquer outra request precisa estar autenticada
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
@@ -58,8 +73,6 @@ public class SecurityConfig {
                 "http://localhost:4200"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-        // Se você usa credenciais, declare explicitamente os headers aceitos
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
