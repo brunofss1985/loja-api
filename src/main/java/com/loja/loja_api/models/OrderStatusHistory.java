@@ -1,5 +1,6 @@
 package com.loja.loja_api.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,5 +23,6 @@ public class OrderStatusHistory {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference("order-status")
     private Order order;
 }

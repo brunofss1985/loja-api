@@ -39,6 +39,20 @@ public class OrderService {
                 .orElse(Collections.emptyList());
     }
 
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+
+    public Optional<Order> getOrderById(Long id) {
+        return orderRepository.findById(id);
+    }
+
+    public List<OrderStatusHistory> getStatusHistoryByOrderId(Long orderId) {
+        return orderRepository.findById(orderId)
+                .map(Order::getStatusHistory)
+                .orElse(Collections.emptyList());
+    }
+
     public void saveStatusHistory(Order order, String status) {
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
