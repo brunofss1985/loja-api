@@ -15,29 +15,35 @@ import java.util.Map;
 public class WebhookController {
 
     private static final Logger logger = LoggerFactory.getLogger(WebhookController.class);
-
     private final WebhookService webhookService;
 
     @PostMapping
     public ResponseEntity<Void> receberNotificacao(@RequestBody Map<String, Object> payload) {
         try {
-            String topic = (String) payload.get("topic");
-            String resource = (String) payload.get("resource");
+            logger.info("🔔 Webhook recebido: {}", payload);
 
-            if (!"payment".equalsIgnoreCase(topic) || resource == null || resource.isBlank()) {
-                logger.warn("Webhook ignorado: tópico '{}' inválido ou resource ausente.", topic);
+            String topic = (String) payload.get("type"); // ← "type" no simulador
+            Object dataObj = payload.get("data");
+
+            if (!"payment".equalsIgnoreCase(topic) || !(dataObj instanceof Map)) {
+                logger.warn("Webhook ignorado: tipo '{}' inválido ou data ausente.", topic);
                 return ResponseEntity.ok().build();
             }
 
-            // O ID do recurso vem como uma URL, ex: https://api.mercadopago.com/v1/payments/12345
-            // Extraímos o ID no final da string
-            Long mercadoPagoPaymentId = Long.valueOf(resource.substring(resource.lastIndexOf("/") + 1));
+            Map<String, Object> dataMap = (Map<String, Object>) dataObj;
+            Object idObj = dataMap.get("id");
 
+            if (idObj == null) {
+                logger.warn("Webhook ignorado: ID não encontrado em 'data'.");
+                return ResponseEntity.ok().build();
+            }
+
+            Long mercadoPagoPaymentId = Long.valueOf(idObj.toString());
             webhookService.processPaymentWebhook(mercadoPagoPaymentId);
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            logger.error("Erro ao processar webhook: {}", e.getMessage());
+            logger.error("❌ Erro ao processar webhook: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         }
     }
