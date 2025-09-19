@@ -6,6 +6,7 @@ import com.loja.loja_api.models.Order;
 import com.loja.loja_api.models.Payment;
 import com.loja.loja_api.repositories.OrderRepository;
 import com.loja.loja_api.repositories.PaymentRepository;
+import com.loja.loja_api.repositories.OrderStatusHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -13,9 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -26,85 +27,95 @@ public class WebhookService {
 
     private final PaymentRepository paymentRepo;
     private final OrderRepository orderRepo;
+    private final OrderStatusHistoryRepository statusHistoryRepo;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${mercadopago.token}")
     private String accessToken;
 
-    /**
-     * Processa o ID de pagamento do Mercado Pago para confirmar o status.
-     * Este método é o ponto de entrada chamado pelo WebhookController.
-     * @param mercadoPagoPaymentId O ID do pagamento extraído do payload do webhook.
-     */
+    @Transactional
     public void processPaymentWebhook(Long mercadoPagoPaymentId) {
-        logger.info("Iniciando processamento do webhook para o ID do pagamento: {}", mercadoPagoPaymentId);
-        confirmarPagamento(mercadoPagoPaymentId);
-    }
-
-    private void confirmarPagamento(Long mercadoPagoPaymentId) {
-        logger.info("Consultando e confirmando pagamento Mercado Pago ID: {}", mercadoPagoPaymentId);
-
-        JSONObject json = consultarPagamento(mercadoPagoPaymentId);
-        if (json == null) {
-            logger.warn("Pagamento com ID {} não encontrado na API do Mercado Pago", mercadoPagoPaymentId);
-            return;
-        }
-
-        String status = json.optString("status");
-        String providerPaymentId = String.valueOf(json.optString("id"));
-
-        Optional<Payment> optPayment = paymentRepo.findByProviderPaymentId(providerPaymentId);
-        if (optPayment.isEmpty()) {
-            logger.warn("Pagamento com providerPaymentId={} não encontrado no banco de dados local.", providerPaymentId);
-            return;
-        }
-
-        Payment payment = optPayment.get();
-
-        if (payment.getStatus().name().equalsIgnoreCase(status)) {
-            logger.info("Status do pagamento já está atualizado. ID do pedido: {}", payment.getOrder().getId());
-            return;
-        }
-
-        PaymentStatus newStatus = PaymentStatus.fromMercadoPagoStatus(status);
-        payment.setStatus(newStatus);
-
-        Order order = payment.getOrder();
-        if (newStatus == PaymentStatus.APPROVED) {
-            payment.setConfirmedAt(Instant.now());
-            order.setStatus(OrderStatus.PAID);
-        } else if (newStatus == PaymentStatus.DECLINED) {
-            order.setStatus(OrderStatus.CANCELED);
-        }
-
-        paymentRepo.save(payment);
-        orderRepo.save(order);
-
-        logger.info("Status do pagamento e pedido atualizados para '{}'. Order ID {}", newStatus, order.getId());
-    }
-
-    private JSONObject consultarPagamento(Long paymentId) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(accessToken);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            logger.info("🔔 Webhook recebido para pagamento ID: {}", mercadoPagoPaymentId);
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                    "https://api.mercadopago.com/v1/payments/" + paymentId,
-                    HttpMethod.GET,
-                    entity,
-                    String.class
-            );
+            // Buscar dados do pagamento na API do Mercado Pago
+            JSONObject mpResponse = fetchPaymentStatusFromMP(mercadoPagoPaymentId);
+            String status = mpResponse.optString("status");
 
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                logger.error("Erro ao consultar pagamento {}: {}", paymentId, response.getBody());
-                return null;
+            logger.info("🔍 Status retornado do MP: {}", status);
+
+            // Verificar se o pagamento existe na base
+            Optional<Payment> paymentOpt = paymentRepo.findByProviderPaymentId(String.valueOf(mercadoPagoPaymentId));
+
+            if (paymentOpt.isEmpty()) {
+                logger.warn("⚠️ Pagamento com providerPaymentId={} não encontrado.", mercadoPagoPaymentId);
+                return;
             }
 
-            return new JSONObject(response.getBody());
+            Payment payment = paymentOpt.get();
+            Order order = payment.getOrder();
+
+            // Mapear status do MP para enum interno
+            PaymentStatus newPaymentStatus = PaymentStatus.fromMercadoPagoStatus(status);
+            payment.setStatus(newPaymentStatus);
+
+            // Atualiza status do pedido com base no status do pagamento
+            switch (newPaymentStatus) {
+                case APPROVED -> {
+                    order.setStatus(OrderStatus.PAID);
+                    saveStatus(order, OrderStatus.PAID);
+                }
+                case CANCELED, DECLINED -> {
+                    order.setStatus(OrderStatus.CANCELED);
+                    saveStatus(order, OrderStatus.CANCELED);
+                }
+                case PENDING -> {
+                    order.setStatus(OrderStatus.CREATED); // ou manter CREATED
+                }
+            }
+
+            // Persistir atualizações
+            paymentRepo.save(payment);
+            orderRepo.save(order);
+
+            logger.info("✅ Status do pedido e pagamento atualizados com sucesso.");
         } catch (Exception e) {
-            logger.error("Erro ao consultar pagamento Mercado Pago com ID {}", paymentId, e);
-            return null;
+            logger.error("❌ Erro ao processar webhook: {}", e.getMessage(), e);
         }
+    }
+
+    private JSONObject fetchPaymentStatusFromMP(Long paymentId) {
+        String url = "https://api.mercadopago.com/v1/payments/" + paymentId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Erro ao consultar status no Mercado Pago: " + response.getBody());
+        }
+
+        return new JSONObject(response.getBody());
+    }
+
+    private void saveStatus(Order order, OrderStatus status) {
+        order.getStatusHistory().add(
+                com.loja.loja_api.models.OrderStatusHistory.builder()
+                        .order(order)
+                        .status(status.name())
+                        .changedAt(java.time.Instant.now())
+                        .build()
+        );
+        statusHistoryRepo.saveAll(order.getStatusHistory());
     }
 }
