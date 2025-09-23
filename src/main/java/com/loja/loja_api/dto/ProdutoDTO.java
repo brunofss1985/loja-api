@@ -64,7 +64,10 @@ public class ProdutoDTO {
 
     public static ProdutoDTO fromEntity(Produto p) {
         int estoqueTotal = (p.getLotes() != null)
-                ? p.getLotes().stream().mapToInt(l -> l.getQuantidade()).sum()
+                ? p.getLotes().stream()
+                .filter(l -> l.getQuantidade() != null) // Proteção contra NPE
+                .mapToInt(l -> l.getQuantidade())
+                .sum()
                 : 0;
 
         return ProdutoDTO.builder()

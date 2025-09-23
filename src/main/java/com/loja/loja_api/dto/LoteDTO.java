@@ -15,7 +15,6 @@ public class LoteDTO {
     private String codigo;
     private Long produtoId;
     private String produtoNome;
-    private Integer quantidade;
     private LocalDate dataValidade;
 
     // Novos campos
@@ -34,7 +33,6 @@ public class LoteDTO {
                 .codigo(lote.getCodigo())
                 .produtoId(lote.getProduto() != null ? lote.getProduto().getId() : null)
                 .produtoNome(lote.getProduto() != null ? lote.getProduto().getNome() : null)
-                .quantidade(lote.getQuantidade())
                 .dataValidade(lote.getDataValidade())
                 .fornecedor(lote.getFornecedor())
                 .custoPorUnidade(lote.getCustoPorUnidade())

@@ -41,7 +41,6 @@ public class LoteService {
 
         Lote lote = Lote.builder()
                 .codigo(dto.getCodigo())
-                .quantidade(dto.getQuantidade())
                 .dataValidade(dto.getDataValidade())
                 .fornecedor(dto.getFornecedor())
                 .custoPorUnidade(dto.getCustoPorUnidade())
@@ -63,7 +62,6 @@ public class LoteService {
                 .orElseThrow(() -> new EntityNotFoundException("Lote não encontrado"));
 
         lote.setCodigo(dto.getCodigo());
-        lote.setQuantidade(dto.getQuantidade());
         lote.setDataValidade(dto.getDataValidade());
         lote.setFornecedor(dto.getFornecedor());
         lote.setCustoPorUnidade(dto.getCustoPorUnidade());
@@ -76,6 +74,7 @@ public class LoteService {
 
         return LoteDTO.fromEntity(repository.save(lote));
     }
+
 
     @Transactional
     public void remover(Long id) {
