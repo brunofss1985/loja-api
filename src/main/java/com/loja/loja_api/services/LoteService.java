@@ -4,6 +4,7 @@ import com.loja.loja_api.dto.LoteDTO;
 import com.loja.loja_api.models.Lote;
 import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.LoteRepository;
+import com.loja.loja_api.repositories.ProdutoRealRepository;
 import com.loja.loja_api.repositories.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,15 @@ public class LoteService {
 
     private final LoteRepository repository;
     private final ProdutoRepository produtoRepository;
+    private final ProdutoRealRepository produtoRealRepository;
 
     @Transactional(readOnly = true)
     public List<LoteDTO> listarTodos() {
-        return repository.findAll().stream()
-                .map(LoteDTO::fromEntity)
+        return repository.findAllWithProduto().stream()
+                .map(lote -> {
+                    lote.setQuantidade(produtoRealRepository.sumQuantidadeByLoteId(lote.getId()));
+                    return LoteDTO.fromEntity(lote);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -31,6 +36,8 @@ public class LoteService {
     public LoteDTO buscarPorId(Long id) {
         Lote lote = repository.findByIdWithProduto(id)
                 .orElseThrow(() -> new EntityNotFoundException("Lote não encontrado"));
+
+        lote.setQuantidade(produtoRealRepository.sumQuantidadeByLoteId(lote.getId()));
         return LoteDTO.fromEntity(lote);
     }
 
@@ -75,9 +82,12 @@ public class LoteService {
         return LoteDTO.fromEntity(repository.save(lote));
     }
 
-
     @Transactional
     public void remover(Long id) {
+        // ✅ Exclui os produtos reais vinculados ao lote
+        produtoRealRepository.deleteByLoteId(id);
+
+        // ✅ Depois exclui o próprio lote
         repository.deleteById(id);
     }
 }

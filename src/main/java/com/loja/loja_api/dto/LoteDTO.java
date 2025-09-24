@@ -17,7 +17,6 @@ public class LoteDTO {
     private String produtoNome;
     private LocalDate dataValidade;
 
-    // Novos campos
     private String fornecedor;
     private Double custoPorUnidade;
     private String localArmazenamento;
@@ -26,6 +25,8 @@ public class LoteDTO {
     private Double valorVendaSugerido;
     private String notaFiscalEntrada;
     private String contatoVendedor;
+
+    private Integer quantidadeTotal; // 👈 NOVO CAMPO
 
     public static LoteDTO fromEntity(Lote lote) {
         return LoteDTO.builder()
@@ -42,6 +43,7 @@ public class LoteDTO {
                 .valorVendaSugerido(lote.getValorVendaSugerido())
                 .notaFiscalEntrada(lote.getNotaFiscalEntrada())
                 .contatoVendedor(lote.getContatoVendedor())
+                .quantidadeTotal(lote.getQuantidade()) // 👈 Preenche com @Transient
                 .build();
     }
 }

@@ -58,4 +58,5 @@ public class Lote {
     @JoinColumn(name = "produto_id", nullable = false)
     @JsonIgnore
     private Produto produto;
+
 }
