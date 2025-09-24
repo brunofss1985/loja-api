@@ -42,23 +42,17 @@ public class Produto {
     private String sabor;
     private String tamanhoPorcao;
     private String statusAprovacao;
-    private String fornecedor;
     private String disponibilidade;
 
     private Double peso;
     private Double preco;
     private Double precoDesconto;
     private String porcentagemDesconto;
-    private Double custo;
-    private Double lucroEstimado;
     private Boolean ativo;
     private Boolean destaque;
 
-    // Estoque e logística (estoque removido, controlado via lotes)
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
-    private String localizacaoFisica;
-    private String codigoBarras;
 
     @Embedded
     private Dimensoes dimensoes;
@@ -68,12 +62,10 @@ public class Produto {
     @Column(name = "restricao")
     private List<String> restricoes;
 
-    // Nutrição e uso
     @Lob
     private String tabelaNutricional;
     private String modoDeUso;
 
-    // SEO e avaliações
     @ElementCollection
     @CollectionTable(name = "produto_palavras_chave", joinColumns = @JoinColumn(name = "produto_id"))
     @Column(name = "palavra")
@@ -86,18 +78,6 @@ public class Produto {
     @Column(name = "comentario")
     private List<String> comentarios;
 
-    // Datas
-    private LocalDate dataCadastro;
-    private LocalDate dataUltimaAtualizacao;
-    private LocalDate dataValidade;
-
-    // Fornecedor extra
-    private Long fornecedorId;
-    private String cnpjFornecedor;
-    private String contatoFornecedor;
-    private String prazoEntregaFornecedor;
-
-    // Vendas
     private Integer quantidadeVendida;
 
     @ElementCollection
@@ -105,13 +85,11 @@ public class Produto {
     @Column(name = "valor")
     private List<Integer> vendasMensais;
 
-    // Imagem principal
     @Lob
     private byte[] imagem;
 
     private String imagemMimeType;
 
-    // Galeria
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "produto_galeria", joinColumns = @JoinColumn(name = "produto_id"))
     @Column(name = "imagem")
@@ -122,7 +100,6 @@ public class Produto {
     @Column(name = "mime_type")
     private List<String> galeriaMimeTypes;
 
-    // Associação com lotes
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Lote> lotes;
 }

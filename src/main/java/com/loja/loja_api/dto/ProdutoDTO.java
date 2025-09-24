@@ -4,7 +4,6 @@ import com.loja.loja_api.models.Dimensoes;
 import com.loja.loja_api.models.Produto;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Data
@@ -23,23 +22,18 @@ public class ProdutoDTO {
     private List<String> objetivos;
     private String sabor;
     private String tamanhoPorcao;
-    private String fornecedor;
     private String statusAprovacao;
     private String disponibilidade;
     private Double peso;
     private Double preco;
     private Double precoDesconto;
     private String porcentagemDesconto;
-    private Double custo;
-    private Double lucroEstimado;
     private Boolean ativo;
     private Boolean destaque;
 
-    private Integer estoqueTotal; // calculado a partir dos lotes
+    private Integer estoqueTotal;
     private Integer estoqueMinimo;
     private Integer estoqueMaximo;
-    private String localizacaoFisica;
-    private String codigoBarras;
     private Dimensoes dimensoes;
     private List<String> restricoes;
     private String tabelaNutricional;
@@ -47,13 +41,6 @@ public class ProdutoDTO {
     private List<String> palavrasChave;
     private Double avaliacaoMedia;
     private List<String> comentarios;
-    private LocalDate dataCadastro;
-    private LocalDate dataUltimaAtualizacao;
-    private LocalDate dataValidade;
-    private Long fornecedorId;
-    private String cnpjFornecedor;
-    private String contatoFornecedor;
-    private String prazoEntregaFornecedor;
     private Integer quantidadeVendida;
     private List<Integer> vendasMensais;
 
@@ -65,7 +52,7 @@ public class ProdutoDTO {
     public static ProdutoDTO fromEntity(Produto p) {
         int estoqueTotal = (p.getLotes() != null)
                 ? p.getLotes().stream()
-                .filter(l -> l.getQuantidade() != null) // Proteção contra NPE
+                .filter(l -> l.getQuantidade() != null)
                 .mapToInt(l -> l.getQuantidade())
                 .sum()
                 : 0;
@@ -81,22 +68,17 @@ public class ProdutoDTO {
                 .objetivos(new ArrayList<>(Optional.ofNullable(p.getObjetivos()).orElse(Collections.emptyList())))
                 .sabor(p.getSabor())
                 .tamanhoPorcao(p.getTamanhoPorcao())
-                .fornecedor(p.getFornecedor())
                 .statusAprovacao(p.getStatusAprovacao())
                 .disponibilidade(p.getDisponibilidade())
                 .peso(p.getPeso())
                 .preco(p.getPreco())
                 .precoDesconto(p.getPrecoDesconto())
                 .porcentagemDesconto(p.getPorcentagemDesconto())
-                .custo(p.getCusto())
-                .lucroEstimado(p.getLucroEstimado())
                 .ativo(p.getAtivo())
                 .destaque(p.getDestaque())
                 .estoqueTotal(estoqueTotal)
                 .estoqueMinimo(p.getEstoqueMinimo())
                 .estoqueMaximo(p.getEstoqueMaximo())
-                .localizacaoFisica(p.getLocalizacaoFisica())
-                .codigoBarras(p.getCodigoBarras())
                 .dimensoes(p.getDimensoes())
                 .restricoes(new ArrayList<>(Optional.ofNullable(p.getRestricoes()).orElse(Collections.emptyList())))
                 .tabelaNutricional(p.getTabelaNutricional())
@@ -104,13 +86,6 @@ public class ProdutoDTO {
                 .palavrasChave(new ArrayList<>(Optional.ofNullable(p.getPalavrasChave()).orElse(Collections.emptyList())))
                 .avaliacaoMedia(p.getAvaliacaoMedia())
                 .comentarios(new ArrayList<>(Optional.ofNullable(p.getComentarios()).orElse(Collections.emptyList())))
-                .dataCadastro(p.getDataCadastro())
-                .dataUltimaAtualizacao(p.getDataUltimaAtualizacao())
-                .dataValidade(p.getDataValidade())
-                .fornecedorId(p.getFornecedorId())
-                .cnpjFornecedor(p.getCnpjFornecedor())
-                .contatoFornecedor(p.getContatoFornecedor())
-                .prazoEntregaFornecedor(p.getPrazoEntregaFornecedor())
                 .quantidadeVendida(p.getQuantidadeVendida())
                 .vendasMensais(new ArrayList<>(Optional.ofNullable(p.getVendasMensais()).orElse(Collections.emptyList())))
                 .imagemMimeType(p.getImagemMimeType())

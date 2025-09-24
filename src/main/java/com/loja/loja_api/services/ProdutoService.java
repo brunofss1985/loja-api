@@ -145,18 +145,12 @@ public class ProdutoService {
                 .preco(dto.getPreco())
                 .precoDesconto(dto.getPrecoDesconto())
                 .porcentagemDesconto(dto.getPorcentagemDesconto())
-                .custo(dto.getCusto())
-                .fornecedor(dto.getFornecedor())
-                .lucroEstimado(dto.getLucroEstimado())
                 .statusAprovacao(dto.getStatusAprovacao())
                 .ativo(dto.getAtivo())
                 .destaque(dto.getDestaque())
                 .disponibilidade(dto.getDisponibilidade())
-                // ❌ não setamos mais estoque, ele vem dos lotes
                 .estoqueMinimo(dto.getEstoqueMinimo())
                 .estoqueMaximo(dto.getEstoqueMaximo())
-                .localizacaoFisica(dto.getLocalizacaoFisica())
-                .codigoBarras(dto.getCodigoBarras())
                 .dimensoes(dto.getDimensoes())
                 .restricoes(dto.getRestricoes())
                 .tabelaNutricional(dto.getTabelaNutricional())
@@ -164,17 +158,11 @@ public class ProdutoService {
                 .palavrasChave(dto.getPalavrasChave())
                 .avaliacaoMedia(dto.getAvaliacaoMedia())
                 .comentarios(dto.getComentarios())
-                .dataCadastro(dto.getDataCadastro())
-                .dataUltimaAtualizacao(dto.getDataUltimaAtualizacao())
-                .dataValidade(dto.getDataValidade())
-                .fornecedorId(dto.getFornecedorId())
-                .cnpjFornecedor(dto.getCnpjFornecedor())
-                .contatoFornecedor(dto.getContatoFornecedor())
-                .prazoEntregaFornecedor(dto.getPrazoEntregaFornecedor())
                 .quantidadeVendida(dto.getQuantidadeVendida())
                 .vendasMensais(dto.getVendasMensais())
                 .build();
     }
+
 
     @Transactional
     public void deletar(Long id) {

@@ -21,9 +21,9 @@ public class ValidadeService {
         LocalDate limite = hoje.plusDays(dias);
 
         return produtoRepository.findAll().stream()
-                .filter(p -> p.getDataValidade() != null)
-                .filter(p -> !p.getDataValidade().isBefore(hoje))
-                .filter(p -> p.getDataValidade().isBefore(limite))
+//                .filter(p -> p.getDataValidade() != null)
+//                .filter(p -> !p.getDataValidade().isBefore(hoje))
+//                .filter(p -> p.getDataValidade().isBefore(limite))
                 .collect(Collectors.toList());
     }
 }
