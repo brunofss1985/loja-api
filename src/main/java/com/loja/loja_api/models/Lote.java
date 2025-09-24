@@ -22,10 +22,8 @@ public class Lote {
     @Column(nullable = false, unique = true)
     private String codigo;
 
-    // 🔻 Adiciona o @Transient aqui
     @Transient
     private Integer quantidade;
-// campo não mais mapeado no banco
 
     @Column(nullable = false)
     private LocalDate dataValidade;
@@ -54,9 +52,17 @@ public class Lote {
     @Column(nullable = false)
     private String contatoVendedor;
 
+    // ✅ Novos campos
+    private Double custoTotalLote;
+    private Double lucroTotalEstimado;
+    private Double lucroEstimadoPorUnidade;
+    private String codigoBarras;
+    private String cnpjFornecedor;
+    private LocalDate dataCadastro;
+    private LocalDate dataAtualizacao;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produto_id", nullable = false)
     @JsonIgnore
     private Produto produto;
-
 }

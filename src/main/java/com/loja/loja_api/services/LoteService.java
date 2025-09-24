@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,18 +47,36 @@ public class LoteService {
         Produto produto = produtoRepository.findById(dto.getProdutoId())
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
 
+        Integer quantidade = dto.getQuantidadeTotal() != null ? dto.getQuantidadeTotal() : 0;
+        Double custoUnit = dto.getCustoPorUnidade() != null ? dto.getCustoPorUnidade() : 0.0;
+        Double valorVendaSugerido = dto.getValorVendaSugerido() != null ? dto.getValorVendaSugerido() : 0.0;
+
+        // ✅ Cálculos automáticos
+        Double custoTotal = custoUnit * quantidade;
+        Double lucroUnit = valorVendaSugerido - custoUnit;
+        Double lucroTotal = lucroUnit * quantidade;
+
         Lote lote = Lote.builder()
                 .codigo(dto.getCodigo())
                 .dataValidade(dto.getDataValidade())
                 .fornecedor(dto.getFornecedor())
-                .custoPorUnidade(dto.getCustoPorUnidade())
+                .custoPorUnidade(custoUnit)
                 .localArmazenamento(dto.getLocalArmazenamento())
                 .statusLote(dto.getStatusLote())
                 .dataRecebimento(dto.getDataRecebimento())
-                .valorVendaSugerido(dto.getValorVendaSugerido())
+                .valorVendaSugerido(valorVendaSugerido)
                 .notaFiscalEntrada(dto.getNotaFiscalEntrada())
                 .contatoVendedor(dto.getContatoVendedor())
                 .produto(produto)
+
+                // ✅ Novos campos calculados
+                .custoTotalLote(custoTotal)
+                .lucroEstimadoPorUnidade(lucroUnit)
+                .lucroTotalEstimado(lucroTotal)
+                .codigoBarras(dto.getCodigoBarras())
+                .cnpjFornecedor(dto.getCnpjFornecedor())
+                .dataCadastro(LocalDate.now())
+                .dataAtualizacao(LocalDate.now())
                 .build();
 
         return LoteDTO.fromEntity(repository.save(lote));
@@ -68,26 +87,40 @@ public class LoteService {
         Lote lote = repository.findByIdWithProduto(id)
                 .orElseThrow(() -> new EntityNotFoundException("Lote não encontrado"));
 
+        Integer quantidade = dto.getQuantidadeTotal() != null ? dto.getQuantidadeTotal() : 0;
+        Double custoUnit = dto.getCustoPorUnidade() != null ? dto.getCustoPorUnidade() : 0.0;
+        Double valorVendaSugerido = dto.getValorVendaSugerido() != null ? dto.getValorVendaSugerido() : 0.0;
+
+        // ✅ Cálculos automáticos
+        Double custoTotal = custoUnit * quantidade;
+        Double lucroUnit = valorVendaSugerido - custoUnit;
+        Double lucroTotal = lucroUnit * quantidade;
+
         lote.setCodigo(dto.getCodigo());
         lote.setDataValidade(dto.getDataValidade());
         lote.setFornecedor(dto.getFornecedor());
-        lote.setCustoPorUnidade(dto.getCustoPorUnidade());
+        lote.setCustoPorUnidade(custoUnit);
         lote.setLocalArmazenamento(dto.getLocalArmazenamento());
         lote.setStatusLote(dto.getStatusLote());
         lote.setDataRecebimento(dto.getDataRecebimento());
-        lote.setValorVendaSugerido(dto.getValorVendaSugerido());
+        lote.setValorVendaSugerido(valorVendaSugerido);
         lote.setNotaFiscalEntrada(dto.getNotaFiscalEntrada());
         lote.setContatoVendedor(dto.getContatoVendedor());
+
+        // ✅ Campos calculados novamente
+        lote.setCustoTotalLote(custoTotal);
+        lote.setLucroEstimadoPorUnidade(lucroUnit);
+        lote.setLucroTotalEstimado(lucroTotal);
+        lote.setCodigoBarras(dto.getCodigoBarras());
+        lote.setCnpjFornecedor(dto.getCnpjFornecedor());
+        lote.setDataAtualizacao(LocalDate.now());
 
         return LoteDTO.fromEntity(repository.save(lote));
     }
 
     @Transactional
     public void remover(Long id) {
-        // ✅ Exclui os produtos reais vinculados ao lote
         produtoRealRepository.deleteByLoteId(id);
-
-        // ✅ Depois exclui o próprio lote
         repository.deleteById(id);
     }
 }
