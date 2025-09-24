@@ -50,6 +50,7 @@ public class SecurityConfig {
 
                         // Lotes - somente ADMIN
                         .requestMatchers("/api/lotes/**").hasRole("ADMIN")
+                        .requestMatchers("/api/produto-real/lote/**").hasRole("ADMIN")
 
                         // ✅ Qualquer outra request precisa estar autenticada
                         .anyRequest().authenticated()
