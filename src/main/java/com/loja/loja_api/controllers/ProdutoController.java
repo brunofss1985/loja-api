@@ -38,13 +38,13 @@ public class ProdutoController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Boolean destaque
     ) {
-        Page<Produto> produtos = service.buscarProdutosComFiltros(
+    Page<Produto> produtos = service.buscarProdutosComFiltros(
                 ListUtils.normalizeList(categorias),
                 ListUtils.normalizeList(marcas),
                 ListUtils.normalizeList(objetivos),
                 minPreco, maxPreco, page, size, sort, destaque
         );
-        return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
+    return ResponseEntity.ok(produtos.map(service::toDTO));
     }
 
     @Transactional(readOnly = true)
@@ -55,8 +55,8 @@ public class ProdutoController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort
     ) {
-        Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
-        return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
+    Page<Produto> produtos = service.buscarPorTermo(termo, page, size, sort);
+    return ResponseEntity.ok(produtos.map(service::toDTO));
     }
 
     @Transactional(readOnly = true)
@@ -65,15 +65,15 @@ public class ProdutoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<Produto> produtos = service.buscarProdutosEmDestaque(page, size);
-        return ResponseEntity.ok(produtos.map(ProdutoDTO::fromEntity));
+    Page<Produto> produtos = service.buscarProdutosEmDestaque(page, size);
+    return ResponseEntity.ok(produtos.map(service::toDTO));
     }
 
     @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoDTO> buscarPorId(@PathVariable Long id) {
-        Produto produto = service.buscarPorId(id);
-        return ResponseEntity.ok(ProdutoDTO.fromEntity(produto));
+    Produto produto = service.buscarPorId(id);
+    return ResponseEntity.ok(service.toDTO(produto));
     }
 
     @PostMapping(consumes = {"multipart/form-data"})

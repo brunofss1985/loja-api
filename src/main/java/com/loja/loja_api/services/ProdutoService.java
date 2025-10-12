@@ -3,6 +3,7 @@ package com.loja.loja_api.services;
 import com.loja.loja_api.dto.ProdutoDTO;
 import com.loja.loja_api.models.Produto;
 import com.loja.loja_api.repositories.ProdutoRepository;
+import com.loja.loja_api.repositories.ProdutoRealRepository;
 import com.loja.loja_api.repositories.ProdutoSpecification;
 import com.loja.loja_api.util.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class ProdutoService {
 
     @Autowired
     private ImagemService imagemService;
+
+    @Autowired
+    private ProdutoRealRepository produtoRealRepository;
 
     @Transactional(readOnly = true)
     public Page<Produto> listarTodosPaginado(int page, int size) {
@@ -86,6 +90,18 @@ public class ProdutoService {
     public Produto buscarPorId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+    }
+
+    // Mapeia Produto -> DTO garantindo estoqueTotal do repositório de ProdutoReal
+    public ProdutoDTO toDTO(Produto produto) {
+        ProdutoDTO dto = ProdutoDTO.fromEntity(produto);
+        try {
+            Integer estoque = produtoRealRepository.sumQuantidadeByProdutoId(produto.getId());
+            dto.setEstoqueTotal(estoque != null ? estoque : 0);
+        } catch (Exception e) {
+            dto.setEstoqueTotal(0);
+        }
+        return dto;
     }
 
     @Transactional
