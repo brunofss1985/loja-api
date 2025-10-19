@@ -10,6 +10,8 @@ import java.util.List;
 public interface ProdutoRealRepository extends JpaRepository<ProdutoReal, Long> {
     List<ProdutoReal> findByLoteId(Long loteId);
 
+    ProdutoReal findFirstByCodigoBarrasAndLote_Codigo(String codigoBarras, String loteCodigo);
+
     @Query("SELECT COALESCE(SUM(pr.quantidade), 0) FROM ProdutoReal pr WHERE pr.lote.id = :loteId")
     Integer sumQuantidadeByLoteId(Long loteId);
 
