@@ -26,8 +26,8 @@ public class VendaService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
 
-        if (order.getStatus() != OrderStatus.PAID) {
-            throw new IllegalStateException("Pedido precisa estar pago para finalizar venda");
+        if (order.getStatus() != OrderStatus.PAID && order.getStatus() != OrderStatus.DESPACHADO) {
+            throw new IllegalStateException("Pedido precisa estar pago ou despachado para finalizar venda");
         }
 
         // localizar produto real pelo código de barras e lote
@@ -37,6 +37,14 @@ public class VendaService {
         }
 
         Produto produto = pr.getProduto();
+
+        // Evitar finalizar mais de uma vez o mesmo produto no mesmo pedido
+        if (produto != null) {
+            long jaFinalizado = produtoVendidoRepository.countByOrder_IdAndProduto_Id(orderId, produto.getId());
+            if (jaFinalizado > 0) {
+                throw new IllegalStateException("Este produto já foi finalizado para este pedido.");
+            }
+        }
 
         // registrar produto vendido
         ProdutoVendido vendido = ProdutoVendido.builder()
@@ -55,13 +63,14 @@ public class VendaService {
         // remover do estoque real (e por consequência do lote e estoque total calculado)
         produtoRealRepository.delete(pr);
 
-        // registrar histórico de status "completed" textual
-        OrderStatusHistory hist = OrderStatusHistory.builder()
-                .order(order)
-                .status("COMPLETED_ITEM")
-                .changedAt(Instant.now())
-                .build();
-        statusHistoryRepository.save(hist);
+    // Atualiza status do pedido para DESPACHADO e registra histórico
+    order.setStatus(OrderStatus.DESPACHADO);
+    OrderStatusHistory hist = OrderStatusHistory.builder()
+        .order(order)
+        .status(OrderStatus.DESPACHADO.name())
+        .changedAt(Instant.now())
+        .build();
+    statusHistoryRepository.save(hist);
 
         return ProdutoVendidoDTO.fromEntity(vendido);
     }
